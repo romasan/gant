@@ -1,0 +1,36 @@
+.root {
+	position: relative;
+
+	a,
+	a:visited,
+	a:active {
+		text-decoration: none;
+	}
+
+	summary {
+		margin-bottom: 5px;
+	}
+}
+
+.title {
+	position: sticky;
+	top: 0;
+	left: 0;
+	width: 100%;
+	padding-bottom: 2px;
+	background-color: #fff;
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	margin: 5px 0;
+}
+
+.footer {
+	display: flex;
+	gap: 5px;
+	margin: 1px 0;
+	justify-content: end;
+}

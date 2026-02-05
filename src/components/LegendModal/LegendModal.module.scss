@@ -1,0 +1,26 @@
+.root {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 20px;
+}
+
+.item {
+    display: flex;
+    gap: 5px;
+
+    & > span {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+.develop { background-color: var(--color-develop); }
+.review { background-color: var(--color-review); }
+.testready { background-color: var(--color-testready); }
+.testing { background-color: var(--color-testing); }
+.testdone { background-color: var(--color-testdone); }
+.deploy { background-color: var(--color-deploy); }
+.designreview { background-color: var(--color-designreview); }
+.awaiting { background-color: var(--color-awaiting); }
+.waitingforrelated { background-color: var(--color-waitingforrelated); }

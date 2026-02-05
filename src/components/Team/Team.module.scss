@@ -1,0 +1,24 @@
+.root {
+    a,
+    a:visited,
+    a:active {
+        text-decoration: none;
+        color: #fff;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+}
+
+.member {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 5px;
+    margin: 0 -5px;
+    margin-bottom: 2px;
+
+    &:hover {
+        background-color: rgba(255, 255, 255, .33);
+    }
+}

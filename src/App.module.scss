@@ -1,0 +1,127 @@
+button,
+summary {
+	cursor: pointer;
+}
+
+input,
+button,
+select {
+	display: flex;
+	align-items: center;
+	min-height: 24px;
+	padding: 0 5px;
+}
+
+.root {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	font-family: monospace;
+	position: relative;
+}
+
+.content {
+	width: 100%;
+	height: calc(100% - 50px);
+	position: relative;
+}
+
+.modalWrapper {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background-color: rgba(0, 0, 0, 0.3);
+	z-index: 40;
+}
+
+.modalWindow {
+	background-color: #fff;
+	border-radius: 3px;
+	padding: 10px;
+	position: relative;
+	max-width: calc(100vw - 30px);
+}
+
+.modalClose {
+	cursor: pointer;
+	position: absolute;
+	top: 5px;
+	right: 5px;
+	z-index: 1;
+}
+
+.modalContent {
+	overflow-y: auto;
+	max-height: calc(100vh - 100px);
+}
+
+.drawer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    background-color: #262626;
+	color: #fff;
+	z-index: 40;
+}
+
+.drawerBody {
+	position: relative;
+	min-width: 400px;
+}
+
+.drawerContent {
+	padding: 30px 10px 10px;
+	overflow-y: auto;
+	max-height: calc(100% - 40px);
+}
+
+.drawerClose {
+	cursor: pointer;
+	position: absolute;
+	top: 10px;
+	left: 10px;
+
+	&::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: -50%;
+		width: 16px;
+		height: 16px;
+		background-color: #262626;
+		border-radius: 50%;
+	}
+
+	& > span {
+		position: relative;
+	}
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	height: 100%;
+	font-family: monospace;
+    font-size: 30pt;
+
+	& > span {
+		animation: spin 1s linear infinite;
+	}
+}

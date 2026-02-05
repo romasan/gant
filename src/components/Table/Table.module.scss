@@ -1,0 +1,58 @@
+:root {
+	--base-size: 20px;
+	--first-col: 400px;
+
+	--color-develop: #0044ff;
+	--color-review: #ff21d3;
+	--color-testready: #fbee3d;
+	--color-testing: #ffbf00;
+	--color-testdone: #77ff00;
+	--color-deploy: #87178f;
+	--color-designreview: #17898f;
+	--color-awaiting: #767676;
+	--color-waitingforrelated: #767676;
+}
+
+.scrollable {
+	width: 100%;
+	max-height: 100%;
+	overflow: auto;
+}
+
+.table {
+	display: table;
+	border-collapse: collapse;
+	position: relative;
+}
+
+.updated {
+	position: absolute;
+	left: calc(var(--first-col) * var(--expanded) + var(--blocks) * var(--base-size));
+	top: 0;
+	width: 1px;
+	height: 100%;
+	background-color: #ffa500;
+}
+
+.today {
+	position: absolute;
+	left: calc(var(--first-col) * var(--expanded) + var(--blocks) * var(--base-size) - 1px);
+	top: 0;
+	width: 2px;
+	height: 100%;
+	background-color: #0267d8;
+
+	// &::after {
+	// 	content: '';
+	// 	position: sticky;
+	// 	top: var(--base-size);
+	// 	left: 0;
+	// 	transform: translateX(-1px);
+	// 	width: 4px;
+	// 	height: 4px;
+	// 	border-radius: 50%;
+	// 	background-color: #0267d8;
+	// 	z-index: 30;
+	// 	display: block;
+	// }
+}

@@ -1,0 +1,121 @@
+.cell {
+	display: table-cell;
+	width: var(--base-size);
+	min-width: var(--base-size);
+	max-width: var(--base-size);
+	height: var(--base-size);
+	border: 1px solid #e7e7e7;
+	font-size: 10px;
+	line-height: var(--base-size);
+	// overflow: hidden;
+	box-sizing: border-box;
+	white-space: nowrap;
+	position: relative;
+	cursor: default;
+}
+
+.firstCol {
+	width: var(--first-col);
+	min-width: var(--first-col);
+	max-width: var(--first-col);
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.firstColText {
+	display: block;
+	width: var(--first-col);
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	padding: 0 5px;
+
+	& a,
+	& a:visited,
+	& a:active {
+		color: #000;
+		text-decoration: none;
+	}
+
+	& a:hover {
+		color: blue;
+		text-decoration: underline;
+	}
+}
+
+.duration {
+	display: block;
+	width: calc(var(--base-size) * var(--cols) - 1px);
+	height: 100%;
+	outline: 3px solid #000;
+	box-sizing: border-box;
+	color: #000;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 1;
+}
+
+.dashed {
+	outline: 3px dashed #000;
+}
+
+.headCell {
+	text-align: center;
+}
+
+.sideCell {
+	text-align: left;
+}
+
+.develop { background-color: var(--color-develop); }
+.review { background-color: var(--color-review); }
+.testready { background-color: var(--color-testready); }
+.testing { background-color: var(--color-testing); }
+.testdone { background-color: var(--color-testdone); }
+.deploy { background-color: var(--color-deploy); }
+.designreview { background-color: var(--color-designreview); }
+.awaiting { background-color: var(--color-awaiting); }
+.waitingforrelated { background-color: var(--color-waitingforrelated); }
+
+.dayOff {
+	background-color: #e7e7e7;
+}
+
+.month {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	font-size: 7px;
+	line-height: 7px;
+	width: 100%;
+}
+
+.cell:not(.headCell):not(.firstCol):hover::after {
+	content: '';
+	border: 2px solid #06f;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	box-sizing: border-box;
+}
+
+
+:global(.expanded) {
+	.cell:first-child {
+		position: sticky;
+		left: 0;
+		background-color: #fff;
+		z-index: 20;
+		outline: 0.5px solid #e7e7e7;
+	}
+}
