@@ -12,7 +12,7 @@ const issue = async (req, res) => {
 		const prevIssueIndex = allIssues.findIndex(
 			(item) =>
 				(item?.jira?.key && (item?.jira?.key === postPayload?.jira?.key)) ||
-				(item?.key && (item?.key === postPayload.key))
+				(item?.id && (item?.id === postPayload.id))
 		);
 		let payload = {};
 
@@ -21,6 +21,7 @@ const issue = async (req, res) => {
 
 			prevIssue.jira = postPayload.jira;
 			prevIssue.base = postPayload.base;
+			prevIssue.updated = new Date().toISOString();
 
 			if (!prevIssue.id) {
 				prevIssue.id = uuid();
@@ -31,7 +32,8 @@ const issue = async (req, res) => {
 		} else {
 			allIssues.push({
 				...postPayload,
-				key: uuid(),
+				id: uuid(),
+				updated: new Date().toISOString(),
 			});
 
 			payload = { created: true };
@@ -49,7 +51,7 @@ const issue = async (req, res) => {
 		const search = getSearch(req);
 		const allIssues = get('issues');
 
-		let nextIssues = allIssues.filter((item) => item?.key !== search?.query);
+		let nextIssues = allIssues.filter((item) => item?.id !== search?.query);
 
 		set('issues', nextIssues);
 

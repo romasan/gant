@@ -11,6 +11,38 @@ if (fs.existsSync(filePath)) {
 	} catch (error) { }
 }
 
+const prevalidate = () => {
+	[
+		'dateRange',
+		'projects',
+		'team',
+		'issues',
+		'weekends',
+	].forEach((key) => {
+		if (!db[key]) {
+			db[key] = [];
+		}
+	});
+
+	if (!db.jql) {
+		db.jql = {};
+	}
+
+	[
+		'projects',
+		'excludeTypes',
+		'excludedStatuses',
+		'components',
+	].forEach((key) => {
+		if (!db.jql[key]) {
+			db.jql[key] = [];
+		}
+	});
+};
+
+prevalidate();
+
+
 const save = () => {
 	fs.writeFileSync(filePath, JSON.stringify(db, null, 2))
 };

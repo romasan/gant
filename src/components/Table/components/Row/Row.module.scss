@@ -1,7 +1,7 @@
 .row {
 	display: table-row;
 
-	&:hover {
+	&:not(.tableHead):hover {
 		background-color: #e4eeff;
 
 		& [data-type="side-cell"] {
@@ -17,7 +17,7 @@
 	left: 0;
 	height: var(--base-size);
 	outline: 1px solid #e7e7e7;
-	z-index: 1;
+	z-index: 2;
 
 	& > span {
 		position: absolute;
@@ -40,10 +40,30 @@
 	}
 }
 
+.badge {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 3px;
+	height: 100%;
+}
+
+.devready { background-color: var(--color-devready); }
+.develop { background-color: var(--color-develop); }
+.review { background-color: var(--color-review); }
+.testready { background-color: var(--color-testready); }
+.testing { background-color: var(--color-testing); }
+.testdone { background-color: var(--color-testdone); }
+.deploy { background-color: var(--color-deploy); }
+.designreview { background-color: var(--color-designreview); }
+.awaiting { background-color: var(--color-awaiting); }
+.waitingforrelated { background-color: var(--color-waitingforrelated); }
+.done { background-color: var(--color-done); }
+
 :global(.expanded) {
 	.group {
 		& > span {
-			width: var(--first-col);
+			width: calc(var(--first-col) - 4px);
 		}
 	}
 }

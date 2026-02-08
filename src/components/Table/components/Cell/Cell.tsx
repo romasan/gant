@@ -28,7 +28,7 @@ interface ICellProps {
 	day: {
 		date: string;
 		number: number;
-		isDayOff: boolean;
+		isWeekend: boolean;
 	};
 	fill: any;
 	issue: any;
@@ -99,13 +99,13 @@ export const Cell = ({
 
 	return (
 		<div
-            data-type="cell"
+			data-type="cell"
 			className={cn(s.cell, {
 				[s.headCell]: x > 0 && y === 0,
 				[s.sideCell]: x === 0,
 				[s.firstCol]: isFirstCol,
-				[s.dayOff]: day.isDayOff,
-				[s.develop]: fill === 'develop',
+				[s.weekend]: day.isWeekend,
+				[s.develop]: ['develop', 'inprogress'].includes(fill),
 				[s.review]: fill === 'review',
 				[s.testready]: fill === 'testready',
 				[s.testing]: fill === 'testing',
@@ -114,7 +114,7 @@ export const Cell = ({
 				[s.designreview]: fill === 'designreview',
 				[s.awaiting]: fill === 'awaiting',
 				[s.waitingforrelated]: fill === 'waitingforrelated',
-				
+
 			})}
 		>
 			{getText()}

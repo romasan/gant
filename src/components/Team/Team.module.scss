@@ -1,24 +1,37 @@
 .root {
-    a,
-    a:visited,
-    a:active {
-        text-decoration: none;
-        color: #fff;
-    }
 
-    a:hover {
-        text-decoration: underline;
-    }
+	a,
+	a:visited,
+	a:active {
+		text-decoration: none;
+		color: #fff;
+	}
+
+	a:hover {
+		text-decoration: underline;
+	}
+
+	h2 {
+		margin: 0 0 10px;
+	}
+
+	label {
+		display: flex;
+		gap: 5px;
+		align-items: center;
+		height: 25px;
+		cursor: pointer;
+	}
 }
 
-.member {
-    display: flex;
-    justify-content: space-between;
-    padding: 2px 5px;
-    margin: 0 -5px;
-    margin-bottom: 2px;
+.row {
+	display: flex;
+	gap: 5px;
+	margin: 2px 0;
+}
 
-    &:hover {
-        background-color: rgba(255, 255, 255, .33);
-    }
+.controls {
+	display: flex;
+	justify-content: end;
+	gap: 5px;
 }

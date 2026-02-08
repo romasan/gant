@@ -1,8 +1,10 @@
 const http = require('http');
-require("dotenv").config();
 const { start } = require('./api/start');
 const { issue } = require('./api/issue');
 const { issues } = require('./api/issues');
+const { list } = require('./api/list');
+const { listJql } = require('./api/listJql');
+require("dotenv").config();
 
 const {
 	WEB_SERVER_HOST,
@@ -13,6 +15,8 @@ const routes = {
 	'/start': start,
 	'/issue': issue,
 	'/issues': issues,
+	'/list': list,
+	'/list/jql': listJql,
 };
 
 const callback = async (req, res) => {

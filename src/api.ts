@@ -32,7 +32,7 @@ export const saveIssue = async (payload: any) => {
 		body: JSON.stringify(payload),
 	})
 
-	return await resp.text();
+	return await resp.json();
 };
 
 export const updateSprintIssues = async () => {
@@ -45,8 +45,32 @@ export const updateSprintIssues = async () => {
 	}
 };
 
-export const deleteIssues = async () => {
+export const deleteIssues = async (payload?: any) => {
 	return await fetch(`${API_HOST}/issues`, {
 		method: 'DELETE',
+		...(payload ? { body: JSON.stringify(payload) } : {}),
+	})
+};
+
+export const refetchIssues = async (payload: any) => {
+	const resp = await fetch(`${API_HOST}/issues`, {
+		method: 'PATCH',
+		body: JSON.stringify(payload),
+	})
+
+	return await resp.json();
+};
+
+export const setList = async (payload: any) => {
+	return await fetch(`${API_HOST}/list`, {
+		method: 'POST',
+		body: JSON.stringify(payload),
+	})
+};
+
+export const setListJql = async (payload: any) => {
+	return await fetch(`${API_HOST}/list/jql`, {
+		method: 'POST',
+		body: JSON.stringify(payload),
 	})
 };

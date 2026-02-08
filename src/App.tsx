@@ -78,6 +78,7 @@ export const App = () => {
 					issues={data?.issues}
 					updated={data?.updated}
 					team={data?.team}
+					weekends={data?.weekends}
 					editIssue={editIssue}
 				/>
 				{drawer && (
@@ -87,8 +88,19 @@ export const App = () => {
 								<span>&times;</span>
 							</div>
 							<div className={s.drawerContent}>
-								{drawer === 'command' && <Team team={data?.team} />}
-								{drawer === 'settings' && <Settings prefetchData={prefetchData} />}
+								{drawer === 'command' && (
+									<Team
+										team={data?.team}
+										groups={data?.groups}
+										onChange={prefetchData}
+									/>
+								)}
+								{drawer === 'settings' && (
+									<Settings
+										data={data}
+										prefetchData={prefetchData}
+									/>
+								)}
 							</div>
 						</div>
 					</div>
@@ -103,6 +115,7 @@ export const App = () => {
 										projects={data.projects}
 										issue={selected}
 										team={data?.team}
+										weekends={data?.weekends}
 										onChange={onSetIssue}
 									/>
 								)}

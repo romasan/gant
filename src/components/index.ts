@@ -4,3 +4,4 @@ export * from './Team';
 export * from './Header';
 export * from './Settings';
 export * from './LegendModal';
+export * from './List';

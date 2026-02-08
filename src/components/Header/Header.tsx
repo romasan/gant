@@ -70,19 +70,25 @@ export const Header = ({
 				{/* <input type="date" onChange={updateTo} value={dateTo} /> */}
 				{/* <button>показать</button> */}
 				{/* · */}
+				{/* <select>
+					<option>все статусы</option>
+					<option>не в работе</option>
+					<option>в работе</option>
+				</select>
+				·
 				<select>
-					<option>все</option>
+					<option>все участники</option>
 					<option>все кроме лида</option>
 					<option>группа 1234</option>
 				</select>
-				·
+				· */}
 				<button onClick={() => setModal('task')}>добавить задачу</button>
 				{/* <button>Распределить неназначенные</button> */}
 				{/* · */}
-				<button onClick={() => setDrawer(drawer === 'command' ? '' : 'command')}>команда</button>
 			</div>
 			<div className={s.right}>
 				<button onClick={() => setModal('legend')}>легенда</button>
+				<button onClick={() => setDrawer(drawer === 'command' ? '' : 'command')}>команда</button>
 				<button onClick={() => setDrawer('settings')}>⚙️</button>
 			</div>
 		</div>

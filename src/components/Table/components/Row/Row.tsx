@@ -28,11 +28,38 @@ export const Row = ({
 		editIssue(issue);
 	};
 
-	const getTitle = () => (
-		<a href={issue?.jira?.key ? `https://jira.vk.team/browse/${issue?.jira?.key}` : '#'} target="_blank" onClick={edit}>
-			{issue?.base?.summary}
-		</a>
-	);
+	const getTitle = () => {
+		const status = (issue?.jira?.statuses?.slice(-1)?.pop()?.to || issue?.jira?.status)?.toLowerCase()?.replace(/\s/ig, '');
+
+		return (
+			<div>
+				{Boolean(status) && (
+					<span
+						className={cn(s.badge, {
+							[s.devready]: ['devready', 'новый'].includes(status),
+							[s.develop]: ['develop', 'inprogress'].includes(status),
+							[s.review]: status === 'review',
+							[s.testready]: status === 'testready',
+							[s.testing]: status === 'testing',
+							[s.testdone]: status === 'testdone',
+							[s.deploy]: status === 'deploy',
+							[s.designreview]: status === 'designreview',
+							[s.awaiting]: status === 'awaiting',
+							[s.waitingforrelated]: status === 'waitingforrelated',
+							[s.done]: ['done', 'закрыт', 'closed'].includes(status),
+						})}
+					/>
+				)}
+				<a
+					href={issue?.jira?.key ? `https://jira.vk.team/browse/${issue?.jira?.key}` : '#'}
+					target="_blank"
+					onClick={edit}
+				>
+					{issue?.base?.summary}
+				</a>
+			</div>
+		);
+	};
 
 	return (
 		<>

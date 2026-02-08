@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 
 import { fetchIssue, saveIssue, deleteIssue } from '../../api';
-import { parseDurationToDays, countWorkDays } from '../../utils';
+import {
+	parseDurationToDays,
+	countWorkDays,
+	countDaysBetween,
+} from '../../utils';
 
 import s from './TaskModal.module.scss';
 
@@ -17,6 +21,7 @@ interface IProps {
 	issue?: any,
 	projects: string[],
 	team: string[],
+	weekends: string[],
 	onChange: () => void;
 }
 
@@ -24,6 +29,7 @@ export const TaskModal = ({
 	issue,
 	projects,
 	team,
+	weekends,
 	onChange,
 }: IProps) => {
 	const editMode = Boolean(issue);
@@ -36,20 +42,27 @@ export const TaskModal = ({
 	const [duration, setDuration] = useState('');
 	const [assignee, setAssignee] = useState('');
 
-	const jiraStartDate = jiraData?.statuses?.find((item: any) => item.to.toLowerCase() === 'develop')?.date;
+	const jiraStartDate = jiraData?.statuses?.find((item: any) => ['develop', 'in progress'].includes(item.to.toLowerCase()))?.date;
 
 	const disabledSetIssue = !summary;
 
 	const handleInputIssue = (event: any) => {
 		const value = event.target.value;
 
-		if (value === '' ||parseNumber(value)) {
+		if (value === '' || parseNumber(value)) {
 			setIssueKey(value.split('.')[0].replace(/\-+/ig, ''));
 		}
 	};
 
 	const handleLoadIssue = async () => {
 		const data = await fetchIssue(`${project}-${issueKey}`);
+
+		setJiraData(data);
+	};
+
+	const handleUpdateIssue = async (event: any) => {
+		event.preventDefault();
+		const data = await fetchIssue(jiraData.key);
 
 		setJiraData(data);
 	};
@@ -68,8 +81,8 @@ export const TaskModal = ({
 	}
 
 	const setIssue = () => {
-		saveIssue({
-			key: issue?.key,
+		const nextData = {
+			id: issue?.id,
 			base: {
 				summary,
 				startDate,
@@ -77,15 +90,17 @@ export const TaskModal = ({
 				assignee,
 			},
 			jira: jiraData || {},
-		}).then(onChange);
+		};
+
+		saveIssue(nextData).then(onChange);
 	};
 
 	const dropIssue = () => {
-		deleteIssue(issue.key).then(onChange);
+		deleteIssue(issue.id).then(onChange);
 	};
 
 	const setDurationBetweenDates = (event: any) => {
-		const value = countWorkDays(startDate, event.target.value);
+		const value = countWorkDays(startDate, event.target.value, weekends);
 
 		setDuration(String(value));
 	}
@@ -120,7 +135,8 @@ export const TaskModal = ({
 			{jiraData.summary && (
 				<div className={s.row}>
 					<a href="#" onClick={fillWithJiraSummary}>⬆️</a>
-					{/* TODO use host from server data */}
+					<a href="#" onClick={handleUpdateIssue}>🔄</a>
+					{/* TODO use host from server data jira.host */}
 					<a href={`https://jira.vk.team/browse/${jiraData.key}`} target="_blank">{jiraData.key}</a>
 					<span>{jiraData.summary}</span>
 				</div>
@@ -129,11 +145,11 @@ export const TaskModal = ({
 				<div className={s.row}>Статус: {jiraData.status}</div>
 			)}
 			{jiraData.createdDate && (
-				<div className={s.row} >Дата создания: {jiraData.createdDate}</div>
+				<div className={s.row}>Дата создания: {jiraData.createdDate} ({countDaysBetween(jiraData.createdDate, new Date())} д. назад)</div>
 			)}
 			{Boolean(jiraStartDate) && (
 				<div className={s.row}>
-					Дата начала работы: {jiraStartDate}
+					Дата начала работы: {jiraStartDate} ({countDaysBetween(jiraStartDate, new Date())} д. назад)
 				</div>
 			)}
 			{!issue?.jira?.key && (
@@ -195,7 +211,7 @@ export const TaskModal = ({
 						<div key={status.date}>
 							{status.date};
 							&nbsp;
-							{status.to}
+							"{status.to}"
 							{/* ? д. */}
 						</div>
 					))}

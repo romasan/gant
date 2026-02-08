@@ -1,20 +1,21 @@
 .root {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    padding: 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	padding: 20px;
 }
 
 .item {
-    display: flex;
-    gap: 5px;
+	display: flex;
+	gap: 5px;
 
-    & > span {
-        width: 20px;
-        height: 20px;
-    }
+	& > span {
+		width: 20px;
+		height: 20px;
+	}
 }
 
+.devready { background-color: var(--color-devready); }
 .develop { background-color: var(--color-develop); }
 .review { background-color: var(--color-review); }
 .testready { background-color: var(--color-testready); }
@@ -24,3 +25,4 @@
 .designreview { background-color: var(--color-designreview); }
 .awaiting { background-color: var(--color-awaiting); }
 .waitingforrelated { background-color: var(--color-waitingforrelated); }
+.done { background-color: var(--color-done); }

@@ -74,6 +74,27 @@ const getIssue = async (issueKey) => {
 	return processIssue(issue);
 }
 
+const refetchIssue = async (key) => {
+	const allIssues = get('issues');
+	const prevIssueIndex = allIssues.findIndex((item) =>
+		item?.jira?.key === key
+	);
+
+	if (prevIssueIndex >= 0) {
+		const issue = await getIssue(key);
+		const prevIssue = allIssues[prevIssueIndex];
+
+		prevIssue.jira = issue;
+		prevIssue.updated = new Date().toISOString();
+
+		if (!prevIssue.id) {
+			prevIssue.id = uuid();
+		}
+
+		set('issues', allIssues);
+	} 
+};
+
 // const cache = checkCache(id);
 // const url = `${JIRA_URL}/rest/agile/1.0/board/${id}/issue?expand=changelog`;
 
@@ -91,23 +112,31 @@ const getIssue = async (issueKey) => {
 // 	return null;
 // };
 
-// TODO get from settings
-const projects = ['vkpl'];
 // const sprints = ['vklive'];
-const excludeTypes = ['Sub-bug', 'Sub-story', 'BugReport'];
-const excludedStatuses = ['Done'];
-const components = ['frontend desktop', 'frontend mobile', 'frontend sdk', 'frontend widgets', 'frontend devapi', 'frontend autotest'];
+// const projects = ['vkpl'];
+// const excludeTypes = ['Sub-bug', 'Sub-story', 'BugReport'];
+// const excludedStatuses = ['Done'];
+// const components = ['frontend desktop', 'frontend mobile', 'frontend sdk', 'frontend widgets', 'frontend devapi', 'frontend autotest'];
 
 const IN = (list) => list.map((item) => `'${item}'`).join(', ');
 
 const updateIssues = async () => {
+	const {
+		projects,
+		excludeTypes,
+		excludedStatuses,
+		components,
+	} = get('jql');
+
 	const jql = `
-		project IN (${IN(projects)}) AND
-		sprint IN openSprints() AND
-		type NOT IN (${IN(excludeTypes)}) AND
-		status NOT IN (${IN(excludedStatuses)}) AND
-		component IN (${IN(components)})
+		${projects.length ? `project IN (${IN(projects)}) AND` : ''}
+		${excludeTypes.length ? `type NOT IN (${IN(excludeTypes)}) AND` : ''}
+		${excludedStatuses.length ? `status NOT IN (${IN(excludedStatuses)}) AND` : ''}
+		${components.length ? `component IN (${IN(components)}) AND` : ''}
+		sprint IN openSprints()
 	`.replace(/[\s\t\n]+/ig, ' ');
+
+	console.log('==== JQL:', jql);
 
 	const url = `${JIRA_URL}/rest/api/2/search?${new URLSearchParams({
 		jql,
@@ -124,7 +153,7 @@ const updateIssues = async () => {
 
 	const data = await response.json();
 
-	// TODO pagination
+	// TODO pagination for load more than 100 issues
 
 	try {
 		fs.writeFileSync(__dirname + '/../tmp/issues.json', JSON.stringify(data, null, 2));
@@ -136,6 +165,9 @@ const updateIssues = async () => {
 
 	const allIssues = get('issues');
 	const issues = data.issues.map(processIssue);
+
+	const payload = {};
+
 	issues.forEach((issue) => {
 		const prevIssueIndex = allIssues.findIndex((item) => item?.jira?.key === issue.key);
 
@@ -148,28 +180,33 @@ const updateIssues = async () => {
 				prevIssue.base = {};
 			}
 
-			prevIssue.base.updated = new Date().toISOString();
+			prevIssue.updated = new Date().toISOString();
+
+			payload.updated = (payload.updated || 0) + 1;
 
 			return;
 		}
 
 		allIssues.push({
 			id: uuid(),
+			updated: new Date().toISOString(),
 			base: {
 				summary: `${issue.key}: ${issue.summary}`,
-				updated: new Date().toISOString(),
 			},
 			jira: issue,
-		})
+		});
+
+		payload.added = (payload.added || 0) + 1;
 	});
 
 	set('issues', allIssues);
 	set('updated', new Date().toISOString());
 
-	return allIssues;
+	return payload;
 };
 
 module.exports = {
 	getIssue,
 	updateIssues,
+	refetchIssue,
 };
