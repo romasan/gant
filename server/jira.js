@@ -71,7 +71,11 @@ const getIssue = async (issueKey) => {
 		return {};
 	}
 
-	return processIssue(issue);
+	try {
+		return processIssue(issue);
+	} catch (error) {
+		return { error: true };
+	}
 }
 
 const refetchIssue = async (key) => {
@@ -164,7 +168,13 @@ const updateIssues = async () => {
 	}
 
 	const allIssues = get('issues');
-	const issues = data.issues.map(processIssue);
+	const issues = data.issues
+		.map(processIssue)
+		.map((issue) => {
+			issue.inSprint = true;
+
+			return issue;
+		});
 
 	const payload = {};
 

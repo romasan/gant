@@ -29,9 +29,11 @@ interface ICellProps {
 		date: string;
 		number: number;
 		isWeekend: boolean;
+		counts: any;
 	};
 	fill: any;
 	issue: any;
+	group?: boolean;
 }
 
 export const Cell = ({
@@ -42,6 +44,7 @@ export const Cell = ({
 	day,
 	fill,
 	issue,
+	group,
 }: ICellProps) => {
 	const isFirstCol = x === 0;
 	const isFirstRow = y === 0;
@@ -57,8 +60,13 @@ export const Cell = ({
 		}
 
 		if (isFirstCol && !isFirstRow) { // left column with titles
+			const setted = (issue?.firstDay && issue?.jira?.timetracking) || (issue?.base?.startDate && issue?.base?.duration);
+
 			return (
-				<span className={s.firstColText} data-type="side-cell">
+				<span className={cn(s.firstColText, {
+					[s.inSprint]: issue?.jira?.inSprint,
+					[s.toCheck]: !setted,
+				})} data-type="side-cell">
 					{title}
 				</span>
 			);
@@ -76,10 +84,17 @@ export const Cell = ({
 		}
 
 		if (hasContent) {
+			const today = new Date().toISOString().split('T')[0];
+			const isExpired = issue?.isPlanned && issue.jira?.key && new Date(today).getTime() > new Date(issue.firstDay).getTime();
+			// console.log('====', issue.firstDay, issue?.base?.summary);
+			// has issue
+			// no wip status
+
 			return (
 				<span
 					className={cn(s.duration, {
-						[s.dashed]: issue?.isPlanned
+						[s.dashed]: issue?.isPlanned,
+						[s.expired]: isExpired,
 					})}
 					style={{
 						'--cols': parseInt(issue?.duration),
@@ -93,18 +108,57 @@ export const Cell = ({
 		return null;
 	}
 
+	const getGroupContent = () => {
+		if (isFirstCol || day.isWeekend) {
+			return '';
+		}
+
+		const today = new Date().toISOString().split('T')[0];
+
+		if (new Date(day.date).getTime() < new Date(today).getTime()) {
+			return '';
+		}
+
+		const assignee = issue?.base?.assignee || issue?.jira?.assignee;
+
+		if (!assignee) {
+			return '';
+		}
+
+		const count = day?.counts?.[assignee] || 0;
+		
+		return (
+			<div className={cn(s.circle, {
+				[s.red]: count > 1,
+				[s.green]: count === 0,
+				[s.blue]: count === 1,
+			})} />
+		);
+	}
+
 	if (isFirstCol && !expanded) {
 		return null;
 	}
 
+	if (isFirstCol && expanded && group) {
+		return <div className={s.firstCol} />
+	}
+
+	if (group) {
+		return (
+			<div className={s.groupCell}>
+				{getGroupContent()}
+			</div>
+		);
+	}
+
 	return (
 		<div
-			data-type="cell"
 			className={cn(s.cell, {
-				[s.headCell]: x > 0 && y === 0,
-				[s.sideCell]: x === 0,
+				[s.headCell]: !isFirstCol && isFirstRow,
 				[s.firstCol]: isFirstCol,
 				[s.weekend]: day.isWeekend,
+				[s.blocked]: fill === 'blocked',
 				[s.develop]: ['develop', 'inprogress'].includes(fill),
 				[s.review]: fill === 'review',
 				[s.testready]: fill === 'testready',
@@ -114,7 +168,6 @@ export const Cell = ({
 				[s.designreview]: fill === 'designreview',
 				[s.awaiting]: fill === 'awaiting',
 				[s.waitingforrelated]: fill === 'waitingforrelated',
-
 			})}
 		>
 			{getText()}

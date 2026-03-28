@@ -26,6 +26,8 @@ export const Settings = ({
 	const [updatedTime, setUpdatedTime] = useState(86400000);
 	const [weekends, setWeekends] = useState<string[]>([]);
 	const [weekend, setWeekend] = useState('');
+	const [delimiters, setDelimiters] = useState<string[]>([]);
+	const [delimiter, setDelimiter] = useState('');
 
 	// const handleInputBoardId = (event: any) => {
 	// 	setBoardId(event.target.value);
@@ -45,7 +47,7 @@ export const Settings = ({
 	}
 
 	const doneIssues = data.issues
-		.filter((issue: any) => ['done', 'закрыт', 'closed'].includes(issue.jira?.statuses?.slice(-1)?.pop()?.to?.toLowerCase()))
+		.filter((issue: any) => ['done', 'закрыт', 'closed'].includes(issue?.jira?.statuses?.slice(-1)?.pop()?.to?.toLowerCase() || ''))
 		.map((issue: any) => issue?.jira?.key)
 		.filter(Boolean);
 
@@ -110,6 +112,27 @@ export const Settings = ({
 		}).then(prefetchData);
 	};
 
+	const handleChangeDelimiter = (event: any) => {
+		setDelimiter(event.target.value);
+	};
+
+	const addDelimiter = () => {
+		if (delimiter) {
+			setDelimiters((v) => v.concat(delimiter));
+		}
+	};
+
+	const deleteDelimiter = (date: string) => () => {
+		setDelimiters((v) => v.filter((item) => item !== date));
+	};
+
+	const saveDelimiters = () => {
+		setList({
+			key: 'delimiters',
+			values: delimiters,
+		}).then(prefetchData);
+	};
+
 	const deleteDoneIssues = () => {
 		if (doneIssues?.length) {
 			deleteIssues({ keys: doneIssues }).then(prefetchData);
@@ -118,6 +141,7 @@ export const Settings = ({
 
 	useEffect(() => {
 		setWeekends(data.weekends);
+		setDelimiters(data.delimiters);
 	}, [data])
 
 	return (
@@ -196,14 +220,33 @@ export const Settings = ({
 				<input type="date" value={weekend} onChange={handleChangeWeekend} />
 				<button onClick={addWeekend}>Добавить</button>
 			</div>
-			{weekends.map((weekend: string) => (
-				<div key={weekend} className={s.item}>
-					<span>{weekend}</span>
-					<a href="#" onClick={deleteWeekend(weekend)}>&times;</a>
-				</div>
-			))}
+			<div className={s.scrollable}>
+				{weekends.map((weekend: string) => (
+					<div key={weekend} className={s.item}>
+						<span>{weekend}</span>
+						<a href="#" onClick={deleteWeekend(weekend)}>&times;</a>
+					</div>
+				))}
+			</div>
 			<div className={s.controls}>
 				<button onClick={saveWeekends}>Сохранить</button>
+			</div>
+
+			<h2>Разделители</h2>
+			<div className={s.row}>
+				<input type="date" value={delimiter} onChange={handleChangeDelimiter} />
+				<button onClick={addDelimiter}>Добавить</button>
+			</div>
+			<div className={s.scrollable}>
+				{delimiters.map((delimiter: string) => (
+					<div key={delimiter} className={s.item}>
+						<span>{delimiter}</span>
+						<a href="#" onClick={deleteDelimiter(delimiter)}>&times;</a>
+					</div>
+				))}
+			</div>
+			<div className={s.controls}>
+				<button onClick={saveDelimiters}>Сохранить</button>
 			</div>
 		</div>
 	);

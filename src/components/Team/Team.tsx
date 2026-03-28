@@ -100,7 +100,7 @@ export const Team = ({
 				onChange={handleChangeTeam}
 			/>
 
-			{/* <h2>Группы</h2>
+			<h2>Группы</h2>
 			{Object.keys(groups).length && (
 				<select onChange={handleSelectGroup} value={selectedGroup}>
 					{Object.keys(groups).map((key) => (
@@ -137,7 +137,7 @@ export const Team = ({
 			<select>
 				<option>все</option>
 				<option>все кроме лида</option>
-			</select> */}
+			</select>
 		</div>
 	);
 };

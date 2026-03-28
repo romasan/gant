@@ -43,3 +43,15 @@
 	justify-content: end;
 	gap: 5;
 }
+
+.scrollable {
+	max-height: 200px;
+	overflow-y: auto;
+	margin: 0 -10px;
+	padding: 0 10px;
+
+	.item {
+		padding: 5px 5px;
+		cursor: default;
+	}
+}

@@ -48,6 +48,7 @@
 	height: 100%;
 }
 
+.blocked { background-color: var(--color-blocked); }
 .devready { background-color: var(--color-devready); }
 .develop { background-color: var(--color-develop); }
 .review { background-color: var(--color-review); }

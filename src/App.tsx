@@ -79,6 +79,7 @@ export const App = () => {
 					updated={data?.updated}
 					team={data?.team}
 					weekends={data?.weekends}
+					delimiters={data?.delimiters}
 					editIssue={editIssue}
 				/>
 				{drawer && (

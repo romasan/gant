@@ -15,9 +15,13 @@ export const parseDurationToDays = (value: string) => {
 };
 
 export const isWeekend = (dateTime: Date, weekends: string[]) => {
-	const key = dateTime.toISOString().split('T')[0];
-
-	return [0, 6].includes(dateTime.getDay()) || weekends.includes(key);
+	try {
+		const key = dateTime.toISOString().split('T')[0];
+	
+		return [0, 6].includes(dateTime.getDay()) || weekends.includes(key);
+	} catch (error) {
+		return false;
+	}
 };
 
 export const expandWeekend = (startDate: string | Date, duration: number, weekends: string[]) => {

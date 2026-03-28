@@ -36,6 +36,7 @@ export const Row = ({
 				{Boolean(status) && (
 					<span
 						className={cn(s.badge, {
+							[s.blocked]: status === 'blocked',
 							[s.devready]: ['devready', 'новый'].includes(status),
 							[s.develop]: ['develop', 'inprogress'].includes(status),
 							[s.review]: status === 'review',
@@ -64,16 +65,32 @@ export const Row = ({
 	return (
 		<>
 			{startGroup && (
-				<div className={s.group} data-type="group-delimiter">
-					<span>{issue?.base?.assignee || issue?.jira?.assignee || 'Не назначена'}</span>
-				</div>
+				<>
+					<div className={s.group}>
+						<span>{issue?.base?.assignee || issue?.jira?.assignee || 'Не назначена'}</span>
+					</div>
+					<div style={{position:'relative'}}>
+						<div style={{position:'absolute',display:'flex',top:'-20px'}}>
+							{days.map((day, x) => (
+								<Cell
+									key={`group-${day.date}-${y}`}
+									day={day}
+									x={x}
+									y={y}
+									expanded={expanded}
+									fill={''}
+									title={'A'}
+									issue={issue}
+									group={true}
+								/>
+							))}
+						</div>
+					</div>
+				</>
 			)}
-			<div
-				data-type="row"
-				className={cn(s.row, {
-					[s.tableHead]: y === 0,
-				})}
-			>
+			<div className={cn(s.row, {
+				[s.tableHead]: y === 0,
+			})}>
 				{days.map((day, x) => (
 					<Cell
 						key={`${day.date}-${y}`}

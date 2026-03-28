@@ -55,8 +55,6 @@ const getToday = (range: string[], today = new Date()) => {
 	return (today.getTime() - fromDate.getTime()) / oneDay;
 };
 
-// const some = (obj: any, keys: string[]) => keys.some((key) => typeof obj[key] !== 'undefined');
-
 // TODO use from db
 const statuses = [ 
 	'открытый',
@@ -79,9 +77,9 @@ const statusWeight = (status: string) =>
 	statuses.indexOf(status?.toLowerCase()) + 1;
 
 const sortByAssignee = (a: any, b: any) =>
-	// (a?.base?.assignee || a?.jira?.assignee) > (b?.base?.assignee || b?.jira?.assignee) ? 1 : -1;
-	(a?.base?.assignee || a?.jira?.assignee)?.localeCompare(b?.base?.assignee || b?.jira?.assignee) ||
-	statusWeight(a.jira.status) - statusWeight(b.jira.status)
+	(a?.base?.assignee || a?.jira?.assignee || '')?.localeCompare(b?.base?.assignee || b?.jira?.assignee || '') ||
+	statusWeight(a.jira.status) - statusWeight(b.jira.status) ||
+	(a?.plannedDays?.[0] || '')?.localeCompare(b?.plannedDays?.[0] || '');
 
 const checkGroupStart = (list: any, index: number) => {
 	const prev = list[index - 1];
@@ -92,6 +90,16 @@ const checkGroupStart = (list: any, index: number) => {
 
 const dateRangeFilter = (dateRange: string[]) => (item: any) => {
 	// TODO filter by date range
+	return true;
+}
+
+const groupFilter = (group: string) => (item: any) => {
+	// TODO
+	return true;
+}
+
+const issueStatusFilter = (status: string) => (item: any) => {
+	// TODO
 	return true;
 }
 
@@ -122,60 +130,78 @@ const prolongStatuses = (statuses: any[], weekends: string[]) => {
 	});
 }
 
-const processIssueDays = (issueDay: any, weekends: string[]) => {
-	// if (issueDay[1]?.base?.summary?.includes('2299')) {
-	// 	console.log('==== processIssueDays', issueDay);
-	// }
+const processDay = (day: any, list: any[]) => {
+	const counts = list.reduce((obj, issue) => {
+		const assignee = issue?.base?.assignee || issue?.jira?.assignee;
 
-	if (issueDay?.jira?.statuses?.length) {
-		const firstDay = issueDay?.jira?.statuses
-			?.find((item: any) => ['develop', 'in progress'].includes(item.to.toLowerCase()))
-			?.date?.split('T')?.[0];
-		const lastStatus = issueDay?.jira?.statuses[issueDay?.jira?.statuses?.length - 1]?.to?.toLowerCase();
-
-		if (firstDay && !['new', 'devready'].includes(lastStatus)) {
-			issueDay.firstDay = firstDay;
-
-			if (issueDay?.jira?.timetracking) {
-				const duration = parseDurationToDays(issueDay?.jira?.timetracking);
-
-				issueDay.duration = expandWeekend(firstDay, duration, weekends);
-			} else if (issueDay?.base?.duration) {
-				issueDay.duration = expandWeekend(firstDay, issueDay?.base?.duration, weekends);
-			}
-		} else if (
-			issueDay?.base?.startDate &&
-			issueDay?.base?.duration
-		) {
-			const duration = parseInt(issueDay?.base?.duration);
-
-			issueDay.duration = expandWeekend(issueDay?.base?.startDate, duration, weekends);
-			issueDay.firstDay = issueDay?.base?.startDate;
-			issueDay.isPlanned = true;
+		if (assignee && issue?.plannedDays?.includes(day.date)) {
+			return {
+				...obj,
+				[assignee]: (obj[assignee] || 0) + 1,
+			};
 		}
 
-		issueDay.days = prolongStatuses(issueDay.jira.statuses, weekends)
+		return obj;
+	}, 0);
+
+	day.counts = counts;
+
+	return day;
+}
+
+const processIssue = (issue: any, weekends: string[]) => {
+	if (issue?.jira?.statuses?.length) {
+		const firstDay = issue?.jira?.statuses
+			?.find((item: any) => ['develop', 'in progress'].includes(item.to.toLowerCase()))
+			?.date?.split('T')?.[0];
+		const lastStatus = issue?.jira?.statuses[issue?.jira?.statuses?.length - 1]?.to?.toLowerCase();
+
+		if (firstDay && !['new', 'devready'].includes(lastStatus)) {
+			issue.firstDay = firstDay;
+
+			if (issue?.jira?.timetracking) {
+				const duration = parseDurationToDays(issue?.jira?.timetracking);
+
+				issue.duration = expandWeekend(firstDay, duration, weekends);
+			} else if (issue?.base?.duration) {
+				issue.duration = expandWeekend(firstDay, issue?.base?.duration, weekends);
+			}
+		} else if (
+			issue?.base?.startDate &&
+			issue?.base?.duration
+		) {
+			const duration = parseInt(issue?.base?.duration);
+
+			issue.duration = expandWeekend(issue?.base?.startDate, duration, weekends);
+			issue.firstDay = issue?.base?.startDate;
+			issue.isPlanned = true;
+		}
+
+		issue.days = prolongStatuses(issue.jira.statuses, weekends)
 			.reduce((list: any, item: any) => ({
 				...list,
 				[item.date.split('T')[0]]: item.to.toLowerCase().replace(/\s/ig, ''),
 			}), {});
 	} else if (
-		!issueDay.firstDay &&
-		issueDay?.base?.startDate &&
-		issueDay?.base?.duration
+		!issue.firstDay &&
+		issue?.base?.startDate &&
+		issue?.base?.duration
 	) {
-		const duration = parseInt(issueDay?.base?.duration);
+		const duration = parseInt(issue?.base?.duration);
 
-		issueDay.duration = expandWeekend(issueDay?.base?.startDate, duration, weekends);
-		issueDay.firstDay = issueDay?.base?.startDate;
-		issueDay.isPlanned = true;
+		issue.duration = expandWeekend(issue?.base?.startDate, duration, weekends);
+		issue.firstDay = issue?.base?.startDate;
+		issue.isPlanned = true;
 	}
 
-	// if (issueDay?.jira?.key?.includes('12770')) {
-	// 	console.log('==== processIssueDays', issueDay);
-	// }
+	if (issue.firstDay && issue.duration) {
+		const lastDay = new Date(issue.firstDay);
 
-	return issueDay;
+		lastDay.setDate(lastDay.getDate() + issue.duration - 1);
+		issue.plannedDays = getDays([issue.firstDay, lastDay.toISOString().split('T')[0]], true, weekends);
+	}
+
+	return issue;
 };
 
 interface IIssue {
@@ -192,29 +218,37 @@ interface ITableProps {
 	updated: string;
 	team: string[];
 	weekends: string[];
+	delimiters: string[];
 	editIssue: (value: any) => void;
 }
 
 export const Table = ({
 	expanded = true,
 	dateRange = [],
-	issues,
+	issues = [],
 	updated,
 	team,
 	weekends,
+	delimiters = [],
 	editIssue,
 }: ITableProps) => {
+	const scrollableRef = useRef(null);
 	const list = useMemo(() => [{ id: '.' }].concat(
 		issues
-			.filter(dateRangeFilter(dateRange))
 			.filter(teamFilter(team))
-			.map((item) => processIssueDays(item, weekends))
+			// .filter(dateRangeFilter(dateRange))
+			// .filter(groupFilter(selectedGroup))
+			// .filter(issueStatusFilter(selectedStatus))
+			.map((item) => processIssue(item, weekends))
 			.sort(sortByAssignee)
 	), [issues, dateRange]);
-	const days = useMemo(() => [firstColDay].concat(getDays(dateRange, false, weekends)), [firstColDay, dateRange]);
+	const days = useMemo(() => [firstColDay].concat(
+		getDays(dateRange, false, weekends)
+			.map((item) => processDay(item, list))
+	), [firstColDay, dateRange]);
 	const todayOffset = getToday(dateRange);
 	const updatedOffset = updated ? getToday(dateRange, new Date(updated)) : 0;
-	const scrollableRef = useRef(null);
+	const delimitersList = delimiters.map((delimiter) => getToday(dateRange, new Date(delimiter)))
 
 	useEffect(() => {
 		setTimeout(() => {
@@ -241,11 +275,21 @@ export const Table = ({
 				<div className={s.updated} style={{
 					'--expanded': expanded ? 1 : 0,
 					'--blocks': updatedOffset,
-				} as any}></div>
+				} as any} />
 				<div className={s.today} style={{
 					'--expanded': expanded ? 1 : 0,
 					'--blocks': todayOffset,
-				} as any}></div>
+				} as any} />
+				{delimitersList.map((delimiter) => (
+					<div
+						key={`delimiter-${delimiter}`}
+						className={s.delimiter}
+						style={{
+							'--expanded': expanded ? 1 : 0,
+							'--blocks': delimiter,
+						} as any}
+					/>
+				))}
 			</div>
 		</div>
 	);

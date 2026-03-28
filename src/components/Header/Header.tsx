@@ -70,9 +70,10 @@ export const Header = ({
 				{/* <input type="date" onChange={updateTo} value={dateTo} /> */}
 				{/* <button>показать</button> */}
 				{/* · */}
-				{/* <select>
+				<select>
 					<option>все статусы</option>
 					<option>не в работе</option>
+					<option>без оценки и даты начала</option>
 					<option>в работе</option>
 				</select>
 				·
@@ -81,7 +82,7 @@ export const Header = ({
 					<option>все кроме лида</option>
 					<option>группа 1234</option>
 				</select>
-				· */}
+				·
 				<button onClick={() => setModal('task')}>добавить задачу</button>
 				{/* <button>Распределить неназначенные</button> */}
 				{/* · */}

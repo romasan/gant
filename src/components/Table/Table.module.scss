@@ -2,6 +2,7 @@
 	--base-size: 20px;
 	--first-col: 400px;
 
+	--color-blocked: #ff0000;
 	--color-devready: #d9d9d9;
 	--color-develop: #0044ff;
 	--color-review: #ff21d3;
@@ -19,6 +20,8 @@
 	width: 100%;
 	max-height: 100%;
 	overflow: auto;
+	padding-bottom: 16px;
+	padding-right: 16px;
 }
 
 .table {
@@ -43,18 +46,13 @@
 	width: 2px;
 	height: 100%;
 	background-color: #0267d8;
+}
 
-	// &::after {
-	// 	content: '';
-	// 	position: sticky;
-	// 	top: var(--base-size);
-	// 	left: 0;
-	// 	transform: translateX(-1px);
-	// 	width: 4px;
-	// 	height: 4px;
-	// 	border-radius: 50%;
-	// 	background-color: #0267d8;
-	// 	z-index: 30;
-	// 	display: block;
-	// }
+.delimiter {
+	position: absolute;
+	left: calc(var(--first-col) * var(--expanded) + var(--blocks) * var(--base-size) - 1px);
+	top: 0;
+	width: 2px;
+	height: 100%;
+	background-color: #000000;
 }
