@@ -86,19 +86,23 @@ export const Cell = ({
 		if (hasContent) {
 			const today = new Date().toISOString().split('T')[0];
 			const isExpired = issue?.isPlanned && issue.jira?.key && new Date(today).getTime() > new Date(issue.firstDay).getTime();
-			// console.log('====', issue.firstDay, issue?.base?.summary);
-			// has issue
-			// no wip status
+			const withTarget = issue.jira.targetStart;
+			const moved = issue.jira.targetStart && issue.jira.targetStart !== issue.base.startDate;
+			const isDuty = issue?.base?.summary?.toLowerCase() === 'дежурство';
 
 			return (
 				<span
 					className={cn(s.duration, {
 						[s.dashed]: issue?.isPlanned,
+						[s.withTarget]: withTarget,
+						[s.moved]: moved,
 						[s.expired]: isExpired,
+						[s.duty]: isDuty,
 					})}
 					style={{
 						'--cols': parseInt(issue?.duration),
 					} as any}
+					data-key={issue?.id}
 				>
 					{issue?.isPlanned && issue?.base?.summary}
 				</span>
@@ -159,6 +163,7 @@ export const Cell = ({
 				[s.firstCol]: isFirstCol,
 				[s.weekend]: day.isWeekend,
 				[s.blocked]: fill === 'blocked',
+				[s.devready]: fill === 'devready',
 				[s.develop]: ['develop', 'inprogress'].includes(fill),
 				[s.review]: fill === 'review',
 				[s.testready]: fill === 'testready',

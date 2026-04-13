@@ -1,0 +1,39 @@
+.menu {
+	position: absolute;
+	background-color: #fff;
+	color: #000;
+	border: 1px solid #c0c0c0;
+	border-radius: 3px;
+	z-index: 1;
+
+	&Item {
+		padding: 3px;
+		cursor: pointer;
+
+		&:hover {
+			background-color: #0267d8;
+			color: fff;
+		}
+	}
+
+	&Move {
+		display: flex;
+		gap: 3px;
+		padding: 3px;
+	}
+
+	&Assignee {
+		padding: 3px;
+	}
+}
+
+.left {
+	rotate: 180deg;
+}
+
+.header {
+	background-color: #0267d8;
+	color: #fff;
+	padding: 3px;
+	cursor: move;
+}

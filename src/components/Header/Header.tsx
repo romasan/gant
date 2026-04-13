@@ -90,7 +90,7 @@ export const Header = ({
 			<div className={s.right}>
 				<button onClick={() => setModal('legend')}>легенда</button>
 				<button onClick={() => setDrawer(drawer === 'command' ? '' : 'command')}>команда</button>
-				<button onClick={() => setDrawer('settings')}>⚙️</button>
+				<button onClick={() => setDrawer(drawer === 'settings' ? '' : 'settings')}>⚙️</button>
 			</div>
 		</div>
 	);

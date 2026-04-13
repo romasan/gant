@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 
 import { fetchIssue, saveIssue, deleteIssue } from '../../api';
 import {
 	parseDurationToDays,
 	countWorkDays,
 	countDaysBetween,
+	expandWeekend,
 } from '../../utils';
+import { UNKNOWN } from '../../constants';
 
 import s from './TaskModal.module.scss';
 
@@ -22,6 +24,7 @@ interface IProps {
 	projects: string[],
 	team: string[],
 	weekends: string[],
+	host: string;
 	onChange: () => void;
 }
 
@@ -30,6 +33,7 @@ export const TaskModal = ({
 	projects,
 	team,
 	weekends,
+	host,
 	onChange,
 }: IProps) => {
 	const editMode = Boolean(issue);
@@ -80,7 +84,16 @@ export const TaskModal = ({
 		setSummary(`${jiraData.key}: ${jiraData.summary}`);
 	}
 
-	const setIssue = () => {
+	const fillWithJiraTarget = (event: any) => {
+		event.preventDefault();
+
+		const value = countWorkDays(jiraData.targetStart, jiraData.targetEnd, weekends);
+
+		setStartDate(jiraData.targetStart);
+		setDuration(String(value));
+	}
+
+	const setIssue = async () => {
 		const nextData = {
 			id: issue?.id,
 			base: {
@@ -92,7 +105,9 @@ export const TaskModal = ({
 			jira: jiraData || {},
 		};
 
-		saveIssue(nextData).then(onChange);
+		await saveIssue(nextData);
+
+		onChange();
 	};
 
 	const dropIssue = () => {
@@ -102,8 +117,32 @@ export const TaskModal = ({
 	const setDurationBetweenDates = (event: any) => {
 		const value = countWorkDays(startDate, event.target.value, weekends);
 
-		setDuration(String(value));
-	}
+		setTimeout(() => {
+			setDuration(String(value));
+		}, 0);
+	};
+
+	const handleUpdateStartDate = (event: any) => {
+		setStartDate(event.target.value);
+	};
+
+	const handleUpdateDuration = (event: any) => {
+		setDuration(event.target.value);
+	};
+
+	const endDate = useMemo(() => {
+		if (duration && startDate) {
+			const expandedDuration = expandWeekend(startDate, Number(duration || 0), weekends);
+
+			let date = new Date(startDate);
+
+			date.setDate(date.getDate() + expandedDuration - 1);
+
+			return date.toISOString().split('T')[0];
+		}
+
+		return '';
+	}, [duration, startDate]);
 
 	useEffect(() => {
 		if (projects?.length) {
@@ -136,8 +175,7 @@ export const TaskModal = ({
 				<div className={s.row}>
 					<a href="#" onClick={fillWithJiraSummary}>⬆️</a>
 					<a href="#" onClick={handleUpdateIssue}>🔄</a>
-					{/* TODO use host from server data jira.host */}
-					<a href={`https://jira.vk.team/browse/${jiraData.key}`} target="_blank">{jiraData.key}</a>
+					<a href={`${host}/browse/${jiraData.key}`} target="_blank">{jiraData.key}</a>
 					<span>{jiraData.summary}</span>
 				</div>
 			)}
@@ -146,6 +184,12 @@ export const TaskModal = ({
 			)}
 			{jiraData.createdDate && (
 				<div className={s.row}>Дата создания: {jiraData.createdDate} ({countDaysBetween(jiraData.createdDate, new Date())} д. назад)</div>
+			)}
+			{jiraData.targetStart && jiraData.targetEnd && (
+				<div className={s.row}>
+					<a href="#" onClick={fillWithJiraTarget}>⬇️</a>
+					Запланировано на: {jiraData.targetStart} - {jiraData.targetEnd}
+				</div>
 			)}
 			{Boolean(jiraStartDate) && (
 				<div className={s.row}>
@@ -168,7 +212,7 @@ export const TaskModal = ({
 				<input
 					type="date"
 					value={startDate}
-					onChange={(event: any) => setStartDate(event.target.value)}
+					onChange={handleUpdateStartDate}
 				/>
 			</div>
 			<div className={s.row}>
@@ -176,11 +220,12 @@ export const TaskModal = ({
 				<input
 					size={3}
 					value={duration}
-					onChange={(event: any) => setDuration(event.target.value)}
+					onChange={handleUpdateDuration}
 				/> д.
 				{Boolean(startDate) && (
 					<input
 						type="date"
+						value={endDate}
 						onChange={setDurationBetweenDates}
 					/>
 				)}
@@ -198,16 +243,20 @@ export const TaskModal = ({
 						{team.map((key) => (
 							<option key={key} value={key}>{key}</option>
 						))}
+						<option value={UNKNOWN}>Не назначена</option>
 					</select>
 				</div>
 			)}
 			{jiraData?.assignee && (
 				<div className={s.row}>Исполнитель: {jiraData.assignee}</div>
 			)}
+			{issue?.updated && (
+				<div className={s.row}>Синхронизировано: {issue.updated} ({countDaysBetween(issue.updated, new Date())} д. назад)</div>
+			)}
 			{Boolean(jiraData?.statuses?.length) && (
 				<details>
 					<summary>История изменения статуса:</summary>
-					{jiraData?.statuses.map((status) => (
+					{jiraData?.statuses.map((status: any) => (
 						<div key={status.date}>
 							{status.date};
 							&nbsp;

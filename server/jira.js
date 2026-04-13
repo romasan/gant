@@ -28,6 +28,22 @@ const processIssue = (issue) => {
 			to: statusField.toString,
 		};
 	}).filter(Boolean);
+
+	const targets = issue.changelog.histories.map((item) =>
+		item.items.filter((v) => ['Target start', 'Target end'].includes(v.field))
+	)
+		.reduce((item, list) => ([...list, ...item]), []);
+
+	const targetStart = targets
+		.filter((item) => item.field === 'Target start')
+		.shift()
+		?.to;
+
+	const targetEnd = targets
+		.filter((item) => item.field === 'Target end')
+		.shift()
+		?.to;
+
 	const updatedDate = issue.fields.updated;
 	const resolvedDate = issue.fields.resolutiondate;
 	const createdDate = issue.fields.created;
@@ -43,6 +59,8 @@ const processIssue = (issue) => {
 		resolvedDate,
 		createdDate,
 		timetracking,
+		targetStart,
+		targetEnd,
 	};
 }
 
@@ -130,6 +148,7 @@ const updateIssues = async () => {
 		excludeTypes,
 		excludedStatuses,
 		components,
+		sprints,
 	} = get('jql');
 
 	const jql = `
@@ -137,7 +156,10 @@ const updateIssues = async () => {
 		${excludeTypes.length ? `type NOT IN (${IN(excludeTypes)}) AND` : ''}
 		${excludedStatuses.length ? `status NOT IN (${IN(excludedStatuses)}) AND` : ''}
 		${components.length ? `component IN (${IN(components)}) AND` : ''}
-		sprint IN openSprints()
+		(
+			sprint IN openSprints()
+			${sprints.length ? `OR sprint IN (${IN(sprints)})` : ''}
+		)
 	`.replace(/[\s\t\n]+/ig, ' ');
 
 	console.log('==== JQL:', jql);

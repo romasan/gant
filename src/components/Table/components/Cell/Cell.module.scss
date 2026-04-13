@@ -69,8 +69,25 @@
 	outline: 3px dashed #000;
 }
 
+.withTarget {
+	outline-color: #57d9a3;
+}
+
+.moved {
+	outline-color: #ba830e;
+}
+
 .expired {
 	outline-color: #f00;
+}
+
+.expired {
+	outline-color: #f00;
+}
+
+.duty {
+	background-color: #000;
+	color: #fff;
 }
 
 .headCell {
@@ -78,6 +95,7 @@
 }
 
 .blocked { background-color: var(--color-blocked); }
+.devready { background-color: var(--color-devready); }
 .develop { background-color: var(--color-develop); }
 .review { background-color: var(--color-review); }
 .testready { background-color: var(--color-testready); }

@@ -30,6 +30,8 @@ export const Row = ({
 
 	const getTitle = () => {
 		const status = (issue?.jira?.statuses?.slice(-1)?.pop()?.to || issue?.jira?.status)?.toLowerCase()?.replace(/\s/ig, '');
+		const needCheckPerformer = issue?.base?.assignee && issue?.jira?.assignee && (issue?.base?.assignee !== issue?.jira?.assignee);
+		const onBoard = Boolean(issue?.duration || issue?.firstDay);
 
 		return (
 			<div>
@@ -56,6 +58,8 @@ export const Row = ({
 					target="_blank"
 					onClick={edit}
 				>
+					{!onBoard && '🚧 '}
+					{needCheckPerformer && '👥 '}
 					{issue?.base?.summary}
 				</a>
 			</div>

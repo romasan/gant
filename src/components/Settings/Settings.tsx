@@ -13,12 +13,12 @@ import s from './Settings.module.scss';
 
 interface ISettingsProps {
 	data: any;
-	prefetchData: () => void;
+	onChange: () => void;
 }
 
 export const Settings = ({
 	data,
-	prefetchData,
+	onChange,
 }: ISettingsProps) => {
 	// const [boardId, setBoardId] = useState('');
 	const [loadingBoard, setLoadingBoard] = useState(false);
@@ -36,13 +36,13 @@ export const Settings = ({
 	const getBoard = () => {
 		setLoadingBoard(true);
 		updateSprintIssues()
-			.then(prefetchData)
+			.then(onChange)
 			.finally(() => setLoadingBoard(false));
 	};
 
 	const clearBoard = () => {
 		if (prompt()) {
-			deleteIssues().then(prefetchData);
+			deleteIssues().then(onChange);
 		}
 	}
 
@@ -77,7 +77,7 @@ export const Settings = ({
 	const updateExpired = () => {
 		setRefetchIssuesLoading(true);
 		refetchIssues({ keys: ussuesToUpdate })
-			.then(prefetchData)
+			.then(onChange)
 			.finally(() => setRefetchIssuesLoading(false));
 	};
 
@@ -88,7 +88,7 @@ export const Settings = ({
 		setListJql({
 			key,
 			values,
-		}).then(prefetchData);
+		}).then(onChange);
 	};
 
 	const handleChangeWeekend = (event: any) => {
@@ -109,7 +109,7 @@ export const Settings = ({
 		setList({
 			key: 'weekends',
 			values: weekends,
-		}).then(prefetchData);
+		}).then(onChange);
 	};
 
 	const handleChangeDelimiter = (event: any) => {
@@ -130,12 +130,12 @@ export const Settings = ({
 		setList({
 			key: 'delimiters',
 			values: delimiters,
-		}).then(prefetchData);
+		}).then(onChange);
 	};
 
 	const deleteDoneIssues = () => {
 		if (doneIssues?.length) {
-			deleteIssues({ keys: doneIssues }).then(prefetchData);
+			deleteIssues({ keys: doneIssues }).then(onChange);
 		}
 	};
 

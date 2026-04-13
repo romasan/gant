@@ -81,6 +81,7 @@ export const App = () => {
 					weekends={data?.weekends}
 					delimiters={data?.delimiters}
 					editIssue={editIssue}
+					onChange={prefetchData}
 				/>
 				{drawer && (
 					<div className={s.drawer}>
@@ -99,7 +100,7 @@ export const App = () => {
 								{drawer === 'settings' && (
 									<Settings
 										data={data}
-										prefetchData={prefetchData}
+										onChange={prefetchData}
 									/>
 								)}
 							</div>
@@ -117,6 +118,7 @@ export const App = () => {
 										issue={selected}
 										team={data?.team}
 										weekends={data?.weekends}
+										host={data.host}
 										onChange={onSetIssue}
 									/>
 								)}
