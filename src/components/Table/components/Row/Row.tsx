@@ -32,6 +32,7 @@ export const Row = ({
 		const status = (issue?.jira?.statuses?.slice(-1)?.pop()?.to || issue?.jira?.status)?.toLowerCase()?.replace(/\s/ig, '');
 		const needCheckPerformer = issue?.base?.assignee && issue?.jira?.assignee && (issue?.base?.assignee !== issue?.jira?.assignee);
 		const onBoard = Boolean(issue?.duration || issue?.firstDay);
+		const tooFast = issue?.jira?.targetStart && issue?.firstDay < issue.jira.targetStart;
 
 		return (
 			<div>
@@ -58,6 +59,7 @@ export const Row = ({
 					target="_blank"
 					onClick={edit}
 				>
+					{tooFast && '🏃 '}
 					{!onBoard && '🚧 '}
 					{needCheckPerformer && '👥 '}
 					{issue?.base?.summary}

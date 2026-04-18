@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { countDaysBetween } from '../../../../utils';
 
 import cn from 'classnames';
 
@@ -48,7 +49,12 @@ export const Cell = ({
 }: ICellProps) => {
 	const isFirstCol = x === 0;
 	const isFirstRow = y === 0;
-	const hasContent = issue?.firstDay === day.date && issue?.duration;
+
+	const withTarget = issue?.jira?.targetStart && issue?.jira?.targetEnd;
+	const moved = issue?.jira?.targetStart && issue?.jira?.targetStart !== issue.base.startDate;
+	const hasContent = (withTarget && !moved)
+		? issue.jira.targetStart === day.date
+		: issue?.firstDay === day.date && issue?.duration;
 
 	const getText = () => {
 		if (isFirstCol && isFirstRow) { // corner
@@ -60,12 +66,13 @@ export const Cell = ({
 		}
 
 		if (isFirstCol && !isFirstRow) { // left column with titles
-			const setted = (issue?.firstDay && issue?.jira?.timetracking) || (issue?.base?.startDate && issue?.base?.duration);
+			// const setted = (issue?.firstDay && issue?.jira?.timetracking) || (issue?.base?.startDate && issue?.base?.duration);
+			// const withTarget = issue.jira.targetStart && issue.jira.targetEnd;
 
 			return (
 				<span className={cn(s.firstColText, {
 					[s.inSprint]: issue?.jira?.inSprint,
-					[s.toCheck]: !setted,
+					[s.isOk]: withTarget,
 				})} data-type="side-cell">
 					{title}
 				</span>
@@ -83,12 +90,14 @@ export const Cell = ({
 			);
 		}
 
-		if (hasContent) {
+		if (hasContent) { // start of range
 			const today = new Date().toISOString().split('T')[0];
 			const isExpired = issue?.isPlanned && issue.jira?.key && new Date(today).getTime() > new Date(issue.firstDay).getTime();
-			const withTarget = issue.jira.targetStart;
-			const moved = issue.jira.targetStart && issue.jira.targetStart !== issue.base.startDate;
 			const isDuty = issue?.base?.summary?.toLowerCase() === 'дежурство';
+			// const isTargetStartCell = withTarget && !moved && day.date === issue.jira.targetStart;
+			const duration = (withTarget && !moved) 
+				? countDaysBetween(issue.jira.targetStart, issue.jira.targetEnd) + 1
+				: issue?.duration;
 
 			return (
 				<span
@@ -100,7 +109,7 @@ export const Cell = ({
 						[s.duty]: isDuty,
 					})}
 					style={{
-						'--cols': parseInt(issue?.duration),
+						'--cols': parseInt(duration),
 					} as any}
 					data-key={issue?.id}
 				>

@@ -6,7 +6,9 @@ import {
 	refetchIssues,
 	setList,
 	setListJql,
+	saveIssue,
 } from '../../api';
+import { countWorkDays } from '../../utils';
 import { List } from '../List';
 
 import s from './Settings.module.scss';
@@ -23,6 +25,7 @@ export const Settings = ({
 	// const [boardId, setBoardId] = useState('');
 	const [loadingBoard, setLoadingBoard] = useState(false);
 	const [refetchIssuesLoading, setRefetchIssuesLoading] = useState(false);
+	const [updateIssuesByTarget, setUpdateIssuesByTarget] = useState(false);
 	const [updatedTime, setUpdatedTime] = useState(86400000);
 	const [weekends, setWeekends] = useState<string[]>([]);
 	const [weekend, setWeekend] = useState('');
@@ -68,6 +71,37 @@ export const Settings = ({
 	const issuesWithJira = data.issues
 		.map((issue: any) => issue?.jira?.key)
 		.filter(Boolean);
+
+	const canSetupByTarget = data.issues
+		.filter((issue: any) =>
+			issue.jira.targetStart &&
+			issue.jira.targetEnd// &&
+			// !issue.base.startDate &&
+			// !issue.base.duration
+		);
+
+	const setupByTarget = async () => {
+		setUpdateIssuesByTarget(true);
+
+		for (const issue of canSetupByTarget) {
+			const nextData = {
+				id: issue?.id,
+				base: {
+					summary: issue.base.summary,
+					startDate: issue.jira.targetStart,
+					duration: countWorkDays(issue.jira.targetStart, issue.jira.targetEnd, weekends),
+					assignee: issue.jira.assignee,
+				},
+				jira: issue.jira || {},
+			};
+
+			await saveIssue(nextData);
+		}
+
+		setUpdateIssuesByTarget(false);
+
+		onChange();
+	};
 
 	const removeAllInDone = () => {
 		// TODO remove all issues with status done
@@ -195,26 +229,44 @@ export const Settings = ({
 			<div className={s.row}>
 				<button onClick={clearBoard} className={s.danger}>Удалить все сохранённые задачи</button>
 			</div>
-			<h2>Проекты в jira</h2>
-			<List
-				list={data.jql.projects}
-				onChange={handleChangeTeam('projects')}
-			/>
-			<h2>Исключить типы задач</h2>
-			<List
-				list={data.jql.excludeTypes}
-				onChange={handleChangeTeam('excludeTypes')}
-			/>
-			<h2>Исключить статусы</h2>
-			<List
-				list={data.jql.excludedStatuses}
-				onChange={handleChangeTeam('excludedStatuses')}
-			/>
-			<h2>Компоненты задач</h2>
-			<List
-				list={data.jql.components}
-				onChange={handleChangeTeam('components')}
-			/>
+
+			<details>
+				<br />
+				<summary>Поля запроса JQL</summary>
+				<h2>Проекты в jira</h2>
+				<List
+					list={data.jql.projects}
+					onChange={handleChangeTeam('projects')}
+				/>
+				<h2>Исключить типы задач</h2>
+				<List
+					list={data.jql.excludeTypes}
+					onChange={handleChangeTeam('excludeTypes')}
+				/>
+				<h2>Исключить статусы</h2>
+				<List
+					list={data.jql.excludedStatuses}
+					onChange={handleChangeTeam('excludedStatuses')}
+				/>
+				<h2>Компоненты задач</h2>
+				<List
+					list={data.jql.components}
+					onChange={handleChangeTeam('components')}
+				/>
+
+			</details>
+
+			<br />
+
+			<button
+				onClick={setupByTarget}
+				disabled={canSetupByTarget.length === 0 || updateIssuesByTarget || loadingBoard}
+			>
+				Синхронизировать расстановку с гантом ({canSetupByTarget.length})
+			</button>
+
+			<br />
+
 			<h2>Выходные дни</h2>
 			<div className={s.row}>
 				<input type="date" value={weekend} onChange={handleChangeWeekend} />

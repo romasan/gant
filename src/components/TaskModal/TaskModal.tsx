@@ -266,6 +266,11 @@ export const TaskModal = ({
 					))}
 				</details>
 			)}
+			<details>
+				<summary>RAW</summary>
+				<pre>{issue && JSON.stringify(issue, null, 2)}</pre>
+			</details>
+
 			<div className={s.footer}>
 				{editMode ? (
 					<>
@@ -276,7 +281,6 @@ export const TaskModal = ({
 					<button disabled={disabledSetIssue} onClick={setIssue}>Добавить</button>
 				)}
 			</div>
-			{/* <pre>{issue && JSON.stringify(issue, null, 2)}</pre> */}
 		</div>
 	);
 };
