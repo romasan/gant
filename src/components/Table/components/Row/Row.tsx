@@ -51,6 +51,7 @@ export const Row = ({
 							[s.awaiting]: status === 'awaiting',
 							[s.waitingforrelated]: status === 'waitingforrelated',
 							[s.done]: ['done', 'закрыт', 'closed'].includes(status),
+							[s.needCheckPerformer]: needCheckPerformer,
 						})}
 					/>
 				)}
@@ -58,6 +59,9 @@ export const Row = ({
 					href={issue?.jira?.key ? `https://jira.vk.team/browse/${issue?.jira?.key}` : '#'}
 					target="_blank"
 					onClick={edit}
+					className={cn({
+						[s.needCheckPerformer]: needCheckPerformer,
+					})}
 				>
 					{tooFast && '🏃 '}
 					{!onBoard && '🚧 '}

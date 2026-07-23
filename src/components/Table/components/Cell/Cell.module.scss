@@ -137,6 +137,8 @@
 	align-items: center;
 	justify-content: center;
 	font-size: calc(var(--base-size) * .5);
+	background-image: linear-gradient(135deg, #dff5ff 25%, #fff 25%, #fff 50%, #dff5ff 50%, #dff5ff 75%, #fff 75%, #fff 100%);
+	background-size: 4.00px 4.00px;
 }
 
 .circle {

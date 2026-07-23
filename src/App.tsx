@@ -80,6 +80,7 @@ export const App = () => {
 					team={data?.team}
 					weekends={data?.weekends}
 					delimiters={data?.delimiters}
+					host={data.host}
 					editIssue={editIssue}
 					onChange={prefetchData}
 				/>

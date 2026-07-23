@@ -160,45 +160,77 @@ const updateIssues = async () => {
 			sprint IN openSprints()
 			${sprints.length ? `OR sprint IN (${IN(sprints)})` : ''}
 		)
-	`.replace(/[\s\t\n]+/ig, ' ');
+	`.replace(/[\s\t\n]+/ig, ' ').trim();
 
+	return await getRandomJql(jql, true);
+};
+
+const getRandomJql = async (jql, inSprint = false) => {
 	console.log('==== JQL:', jql);
 
-	const url = `${JIRA_URL}/rest/api/2/search?${new URLSearchParams({
-		jql,
-		maxResults: 100,
-		expand: 'changelog',
-		fields: 'key,summary,status,assignee,updated,created,sprint,timetracking'
-	})}`;
-
-	const response = await fetch(url, {
-		headers: {
-			'Authorization': `Bearer ${JIRA_TOKEN}`
-		}
-	});
-
-	const data = await response.json();
-
-	// TODO pagination for load more than 100 issues
+	let allDataIssues = [];
+	let startAt = 0;
+	const maxResults = 100;
+	let total;
 
 	try {
-		fs.writeFileSync(__dirname + '/../tmp/issues.json', JSON.stringify(data, null, 2));
-	} catch (error) {
-		console.log('==== Error:', error);
+		do {
+			const url = `${JIRA_URL}/rest/api/2/search?${new URLSearchParams({
+				jql,
+				maxResults,
+				startAt,
+				expand: 'changelog',
+				fields: 'key,summary,status,assignee,updated,created,sprint,timetracking'
+			})}`;
+	
+			const response = await fetch(url, {
+				headers: {
+					'Authorization': `Bearer ${JIRA_TOKEN}`
+				}
+			});
+	
+			const data = await response.json();
 
-		return {};
+			if (data?.errorMessages?.length) {
+				throw new Error(data.errorMessages.join('\n'));
+			}
+	
+			if (total === undefined) {
+				total = data.total;
+			}
+	
+			allDataIssues = allDataIssues.concat(data.issues);
+			startAt += maxResults;
+	
+			try {
+				fs.writeFileSync(__dirname + '/../tmp/issues.json', JSON.stringify(data, null, 2));
+			} catch (error) {
+				console.log('==== Error:', error);
+	
+				return {};
+			}
+		} while (startAt < total);
+	} catch (error) {
+		console.log('==== catch', String(error));
+		return {
+			error: String(error),
+		}
 	}
 
+	console.log('==== ok');
+
 	const allIssues = get('issues');
-	const issues = data.issues
+	const issues = allDataIssues
 		.map(processIssue)
 		.map((issue) => {
-			issue.inSprint = true;
+			issue.inSprint = inSprint;
 
 			return issue;
 		});
 
-	const payload = {};
+	const payload = {
+		jql,
+	};
 
 	issues.forEach((issue) => {
 		const prevIssueIndex = allIssues.findIndex((item) => item?.jira?.key === issue.key);
@@ -241,4 +273,5 @@ module.exports = {
 	getIssue,
 	updateIssues,
 	refetchIssue,
+	getRandomJql,
 };

@@ -7,6 +7,7 @@ import {
 	setList,
 	setListJql,
 	saveIssue,
+	runRandomJql,
 } from '../../api';
 import { countWorkDays } from '../../utils';
 import { List } from '../List';
@@ -31,6 +32,7 @@ export const Settings = ({
 	const [weekend, setWeekend] = useState('');
 	const [delimiters, setDelimiters] = useState<string[]>([]);
 	const [delimiter, setDelimiter] = useState('');
+	const [randomJql, setRandomJql] = useState('');
 
 	// const handleInputBoardId = (event: any) => {
 	// 	setBoardId(event.target.value);
@@ -118,7 +120,7 @@ export const Settings = ({
 	const handleSelectUpdatedTime = (event: any) =>
 		setUpdatedTime(Number(event.target.value));
 
-	const handleChangeTeam = (key: string) => (values: string[]) => {
+	const handleChangeJQLParam = (key: string) => (values: string[]) => {
 		setListJql({
 			key,
 			values,
@@ -171,6 +173,15 @@ export const Settings = ({
 		if (doneIssues?.length) {
 			deleteIssues({ keys: doneIssues }).then(onChange);
 		}
+	};
+
+	const handleRandomJql = (event: any) => {
+		setRandomJql(event.target.value);
+	};
+
+	const getRandomJql = async () => {
+		await runRandomJql(randomJql.replace(/\n/ig, ' '));
+		onChange();
 	};
 
 	useEffect(() => {
@@ -230,28 +241,43 @@ export const Settings = ({
 				<button onClick={clearBoard} className={s.danger}>Удалить все сохранённые задачи</button>
 			</div>
 
+			<textarea
+				rows={3}
+				cols={40}
+				value={randomJql}
+				onChange={handleRandomJql}
+			></textarea>
+			<button onClick={getRandomJql}>Запрос JQL</button>
+
+			<br />
+
 			<details>
 				<br />
 				<summary>Поля запроса JQL</summary>
 				<h2>Проекты в jira</h2>
 				<List
 					list={data.jql.projects}
-					onChange={handleChangeTeam('projects')}
+					onChange={handleChangeJQLParam('projects')}
+				/>
+				<h2>Спринты</h2>
+				<List
+					list={data.jql.sprints}
+					onChange={handleChangeJQLParam('sprints')}
 				/>
 				<h2>Исключить типы задач</h2>
 				<List
 					list={data.jql.excludeTypes}
-					onChange={handleChangeTeam('excludeTypes')}
+					onChange={handleChangeJQLParam('excludeTypes')}
 				/>
 				<h2>Исключить статусы</h2>
 				<List
 					list={data.jql.excludedStatuses}
-					onChange={handleChangeTeam('excludedStatuses')}
+					onChange={handleChangeJQLParam('excludedStatuses')}
 				/>
 				<h2>Компоненты задач</h2>
 				<List
 					list={data.jql.components}
-					onChange={handleChangeTeam('components')}
+					onChange={handleChangeJQLParam('components')}
 				/>
 
 			</details>

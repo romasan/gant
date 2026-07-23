@@ -79,6 +79,7 @@ export const List = ({
 					<a href="#" onClick={deleteItem(index)}>&times;</a>
 				</div>
 			))}
+			{!values.length && <center>пусто</center>}
 
 			<div className={s.footer}>
 				<button onClick={add}>Добавить</button>

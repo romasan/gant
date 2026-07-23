@@ -72,15 +72,18 @@ export const Header = ({
 				{/* · */}
 				<select>
 					<option>все статусы</option>
-					<option>не в работе</option>
-					<option>без оценки и даты начала</option>
-					<option>в работе</option>
 				</select>
-				·
+				<select>
+					<option>все типы</option>
+				</select>
+				<select>
+					<option>любая дата начала</option>
+				</select>
 				<select>
 					<option>все участники</option>
 					<option>все кроме лида</option>
 					<option>группа 1234</option>
+					<option>рассинхрон назначенного</option>
 				</select>
 				·
 				<button onClick={() => setModal('task')}>добавить задачу</button>

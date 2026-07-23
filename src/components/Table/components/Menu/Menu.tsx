@@ -8,6 +8,7 @@ interface IMenuProps {
 	menu: any;
 	menuRef?: any;
 	team: string[],
+	host: string;
 	editIssue: (value: any) => void;
 	onChange: () => void;
 }
@@ -16,6 +17,7 @@ export const Menu = ({
 	menu,
 	menuRef,
 	team,
+	host,
 	editIssue,
 	onChange,
 }: IMenuProps) => {
@@ -33,6 +35,12 @@ export const Menu = ({
 
 	const handleMenuAssignee = () => {
 		setTimeout(() => setMenuScreen('assignee'), 0);
+	};
+
+	const handleMenuGoToJira = () => {
+		const link = `${host}/browse/${menu.issue?.jira?.key}`;
+
+		window.open(link);
 	};
 
 	const calcMenuStyles = () => {
@@ -118,6 +126,7 @@ export const Menu = ({
 					<div className={s.menuItem} onClick={handleMenuEdit}>редактировать</div>
 					<div className={s.menuItem} onClick={handleMenuMove}>сдвинуть</div>
 					<div className={s.menuItem} onClick={handleMenuAssignee}>назначить на другого</div>
+					<div className={s.menuItem} onClick={handleMenuGoToJira}>перейти</div>
 				</>
 			)}
 			{menuScreen === 'move' && (

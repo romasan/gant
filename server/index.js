@@ -4,6 +4,7 @@ const { issue } = require('./api/issue');
 const { issues } = require('./api/issues');
 const { list } = require('./api/list');
 const { listJql } = require('./api/listJql');
+const { randomJql } = require('./api/randomJql');
 require("dotenv").config();
 
 const {
@@ -17,6 +18,7 @@ const routes = {
 	'/issues': issues,
 	'/list': list,
 	'/list/jql': listJql,
+	'/randomJql': randomJql,
 };
 
 const callback = async (req, res) => {

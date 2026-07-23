@@ -36,6 +36,7 @@ interface ITableProps {
 	team: string[];
 	weekends: string[];
 	delimiters: string[];
+	host: string;
 	editIssue: (value: any) => void;
 	onChange: () => void;
 }
@@ -48,6 +49,7 @@ export const Table = ({
 	team,
 	weekends,
 	delimiters = [],
+	host,
 	editIssue,
 	onChange,
 }: ITableProps) => {
@@ -163,6 +165,7 @@ export const Table = ({
 					menuRef={menuRef}
 					menu={menu}
 					team={team}
+					host={host}
 					editIssue={editIssue}
 					onChange={onChange}
 				/>

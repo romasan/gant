@@ -74,3 +74,11 @@ export const setListJql = async (payload: any) => {
 		body: JSON.stringify(payload),
 	})
 };
+
+
+export const runRandomJql = async (query: string) => {
+	return await fetch(`${API_HOST}/randomJql`, {
+		method: 'POST',
+		body: JSON.stringify({ query }),
+	});
+};
