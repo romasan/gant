@@ -8,6 +8,7 @@ import {
 	expandWeekend,
 } from '../../utils';
 import { UNKNOWN } from '../../constants';
+import { PriorityLabel } from '../PriorityLabel';
 
 import s from './TaskModal.module.scss';
 
@@ -181,6 +182,9 @@ export const TaskModal = ({
 			)}
 			{jiraData.status && (
 				<div className={s.row}>Статус: {jiraData.status}</div>
+			)}
+			{jiraData.priority && (
+				<div className={s.row}>Приоритет: <PriorityLabel priority={jiraData.priority} /> {jiraData.priority}</div>
 			)}
 			{jiraData.createdDate && (
 				<div className={s.row}>Дата создания: {jiraData.createdDate} ({countDaysBetween(jiraData.createdDate, new Date())} д. назад)</div>

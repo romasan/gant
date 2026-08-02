@@ -5,3 +5,4 @@ export * from './Header';
 export * from './Settings';
 export * from './LegendModal';
 export * from './List';
+export * from './PriorityLabel';

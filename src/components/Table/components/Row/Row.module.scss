@@ -75,6 +75,11 @@ a:active {
 	}
 }
 
+.issue {
+	display: flex;
+    align-items: center;
+}
+
 :global(.expanded) {
 	.group {
 		& > span {

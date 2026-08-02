@@ -14,6 +14,7 @@ const processIssue = (issue) => {
 	const status = issue.fields.status.name;
 	const summary = issue.fields.summary;
 	const assignee = issue.fields.assignee.displayName;
+	const priority = issue.fields.priority.name;
 	const statuses = issue.changelog.histories.map((item) => {
 		const statusField = item.items.find((v) => v.field === 'status');
 
@@ -61,6 +62,7 @@ const processIssue = (issue) => {
 		timetracking,
 		targetStart,
 		targetEnd,
+		priority,
 	};
 }
 
@@ -68,7 +70,7 @@ const getIssue = async (issueKey) => {
 	// const url = `${JIRA_URL}/rest/api/2/issue/${issueKey}?expand=changelog`;
 	const url = `${JIRA_URL}/rest/api/2/issue/${issueKey}?${new URLSearchParams({
 		expand: 'changelog',
-		fields: 'key,summary,status,assignee,updated,created,sprint,timetracking'
+		fields: 'key,summary,status,assignee,updated,created,sprint,timetracking,priority'
 	})}`;
 
 	const response = await fetch(url, {
@@ -180,7 +182,7 @@ const getRandomJql = async (jql, inSprint = false) => {
 				maxResults,
 				startAt,
 				expand: 'changelog',
-				fields: 'key,summary,status,assignee,updated,created,sprint,timetracking'
+				fields: 'key,summary,status,assignee,updated,created,sprint,timetracking,priority'
 			})}`;
 	
 			const response = await fetch(url, {
@@ -214,6 +216,7 @@ const getRandomJql = async (jql, inSprint = false) => {
 		console.log('==== catch', String(error));
 		return {
 			error: String(error),
+			jql,
 		}
 	}
 

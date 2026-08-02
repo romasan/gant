@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 import cn from 'classnames';
 
 import { Cell } from '../Cell/';
+import { PriorityLabel } from '../../../PriorityLabel';
 
 import s from './Row.module.scss';
 
@@ -59,13 +60,14 @@ export const Row = ({
 					href={issue?.jira?.key ? `https://jira.vk.team/browse/${issue?.jira?.key}` : '#'}
 					target="_blank"
 					onClick={edit}
-					className={cn({
+					className={cn(s.issue, {
 						[s.needCheckPerformer]: needCheckPerformer,
 					})}
 				>
 					{tooFast && '🏃 '}
 					{!onBoard && '🚧 '}
 					{needCheckPerformer && '👥 '}
+					<PriorityLabel priority={issue?.jira?.priority} />
 					{issue?.base?.summary}
 				</a>
 			</div>
