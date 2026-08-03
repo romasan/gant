@@ -106,13 +106,34 @@ export const Menu = ({
 		setStartDate(date.toISOString().split('T')[0]);
 	};
 
-	const handleSelectMember = (event: any) => {
-		setAssignee(event.target.value);
-		// TODO save & reload
+	const handleSelectMember = async (event: any) => {
+		const value = event.target.value;
+
+		if (!value) {
+			return;
+		}
+
+		const nextData = {
+			id: menu.issue?.id,
+			base: {
+				summary: menu.issue?.base?.summary,
+				startDate: menu.issue?.base?.startDate,
+				duration: menu.issue?.base?.duration,
+				assignee: value,
+			},
+			jira: menu.issue?.jira || {},
+		};
+
+		await saveIssue(nextData);
+
+		onChange();
+
+		setAssignee(value);
 	};
 
 	useEffect(() => {
 		setStartDate(menu?.issue?.base?.startDate || '');
+		setAssignee(menu?.issue?.base?.assignee || '');
 	}, [menu]);
 
 	return (

@@ -330,4 +330,3 @@ JIRA_TOKEN=                  # Bearer-токен для Jira API
 - `src/components/Table/utils.ts` содержит закомментированные фильтры (`dateRangeFilter`, `groupFilter`, `issueStatusFilter`) — фильтрация по диапазону/группе/статусу ещё не реализована.
 - Сортировка `statuses` захардкожена в `Table/utils.ts` с пометкой `// TODO use from db`.
 - Фильтры в `Header` — плейсхолдеры (select без изменения состояния).
-- Редактирование исполнителя в контекстном меню (`Menu → handleSelectMember`) — сохранение закомментировано (`// TODO save & reload`).
