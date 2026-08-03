@@ -1,4 +1,4 @@
-const API_HOST = 'http://localhost:7778';
+const API_HOST = `http://${process.env.WEB_SERVER_HOST || 'localhost'}:${process.env.WEB_SERVER_PORT || '7778'}`;
 
 export const fetchData = async () => {
 	try {
