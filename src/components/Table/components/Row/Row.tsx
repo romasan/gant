@@ -65,7 +65,7 @@ export const Row = ({
 					})}
 				>
 					{tooFast && '🏃 '}
-					{!onBoard && '🚧 '}
+					{!onBoard && '⚓ '}
 					{needCheckPerformer && '👥 '}
 					<PriorityLabel priority={issue?.jira?.priority} />
 					{issue?.base?.summary}
