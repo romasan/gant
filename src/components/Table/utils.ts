@@ -89,23 +89,71 @@ export const checkGroupStart = (list: any, index: number) => {
 	return index !== 0 && (index === 1 || (prev?.base?.assignee || prev?.jira?.assignee) !== (next?.base?.assignee || next?.jira?.assignee));
 };
 
-const dateRangeFilter = (dateRange: string[]) => (item: any) => {
-	// TODO filter by date range
-	return true;
+// Текущий статус задачи: последний переход в истории статусов, иначе jira.status
+export const getIssueStatus = (item: any) => {
+	const history = item?.jira?.statuses;
+
+	return (history?.length ? history[history.length - 1]?.to : item?.jira?.status) || '';
 };
 
-const groupFilter = (group: string) => (item: any) => {
-	// TODO
-	return true;
+// Оставить задачи, дни которых попадают в выбранный диапазон (без дат — оставляем)
+export const dateRangeFilter = (dateRange: string[]) => (item: any) => {
+	const [from, to] = dateRange || [];
+
+	if (!from || !to) {
+		return true;
+	}
+
+	const days = item?.plannedDays?.length
+		? item.plannedDays
+		: (item?.firstDay ? [item.firstDay] : []);
+
+	if (!days.length) {
+		return true;
+	}
+
+	return days.some((day: string) => day >= from && day <= to);
 };
 
-const issueStatusFilter = (status: string) => (item: any) => {
-	// TODO
-	return true;
+// Группа участников: '' — все, 'sync' — рассинхрон назначенного, иначе имя группы из db.groups
+export const groupFilter = (group: string, groups: any = {}) => (item: any) => {
+	if (!group) {
+		return true;
+	}
+
+	const assignee = item?.base?.assignee || item?.jira?.assignee;
+
+	if (group === 'sync') {
+		return Boolean(item?.base?.assignee && item?.jira?.assignee && item.base.assignee !== item.jira.assignee);
+	}
+
+	const members = groups?.[group];
+
+	return Array.isArray(members) ? members.includes(assignee) : true;
+};
+
+export const issueStatusFilter = (status: string) => (item: any) =>
+	!status || getIssueStatus(item).toLowerCase() === status.toLowerCase();
+
+export const issueTypeFilter = (type: string) => (item: any) =>
+	!type || (item?.jira?.type || '') === type;
+
+// '' / 'any' — любая, 'has' — есть дата начала, 'none' — нет даты начала
+export const startDateFilter = (mode: string) => (item: any) => {
+	if (!mode || mode === 'any') {
+		return true;
+	}
+
+	const hasStart = Boolean(item?.base?.startDate || item?.jira?.targetStart);
+
+	return mode === 'has' ? hasStart : !hasStart;
 };
 
 export const teamFilter = (team: string[]) => (item: any) =>
 	(!item?.base?.assignee && !item?.jira?.assignee) || [UNKNOWN, ...team].includes(item?.base?.assignee || item?.jira?.assignee);
+
+export const searchNameFilter = (search: string) => (item: any) =>
+	!search.trim() || (item?.base?.summary || '').toLowerCase().includes(search.trim().toLowerCase());
 
 const prolongStatuses = (statuses: any[], weekends: string[]) => {
 	const from = statuses[0].date.split('T')[0];

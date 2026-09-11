@@ -9,6 +9,12 @@ import {
 	sortTable,
 	checkGroupStart,
 	teamFilter,
+	searchNameFilter,
+	dateRangeFilter,
+	groupFilter,
+	issueStatusFilter,
+	issueTypeFilter,
+	startDateFilter,
 	processDay,
 	processIssue,
 } from './utils';
@@ -31,9 +37,16 @@ interface IIssue {
 interface ITableProps {
 	expanded: boolean;
 	dateRange: string[];
+	filterDateRange?: string[];
 	issues: IIssue[];
 	updated: string;
 	team: string[];
+	search: string;
+	status: string;
+	type: string;
+	startDate: string;
+	group: string;
+	groups: any;
 	weekends: string[];
 	delimiters: string[];
 	host: string;
@@ -44,9 +57,16 @@ interface ITableProps {
 export const Table = ({
 	expanded = true,
 	dateRange = [],
+	filterDateRange = [],
 	issues = [],
 	updated,
 	team,
+	search = '',
+	status = '',
+	type = '',
+	startDate = '',
+	group = '',
+	groups = {},
 	weekends,
 	delimiters = [],
 	host,
@@ -61,12 +81,15 @@ export const Table = ({
 	const list = useMemo(() => [{ id: '.' }].concat(
 		issues
 			.filter(teamFilter(team))
-			// .filter(dateRangeFilter(dateRange))
-			// .filter(groupFilter(selectedGroup))
-			// .filter(issueStatusFilter(selectedStatus))
+			.filter(searchNameFilter(search))
+			.filter(issueStatusFilter(status))
+			.filter(issueTypeFilter(type))
+			.filter(startDateFilter(startDate))
+			.filter(groupFilter(group, groups))
 			.map((item) => processIssue(item, weekends))
+			.filter(dateRangeFilter(filterDateRange))
 			.sort(sortTable)
-	), [issues, dateRange]);
+	), [issues, dateRange, filterDateRange, weekends, team, search, status, type, startDate, group, groups]);
 	const days = useMemo(() => [firstColDay].concat(
 		getDays(dateRange, false, weekends)
 			.map((item) => processDay(item, list))

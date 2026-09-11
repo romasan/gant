@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 import { fetchData } from './api';
+import { getIssueStatus } from './components/Table/utils';
 import {
 	Header,
 	Table,
@@ -18,6 +19,23 @@ export const App = () => {
 	const [modal, setModal] = useState('');
 	const [drawer, setDrawer] = useState('');
 	const [selected, setSelected] = useState<any>(null);
+	const [search, setSearch] = useState('');
+	const [status, setStatus] = useState('');
+	const [type, setType] = useState('');
+	const [startDate, setStartDate] = useState('');
+	const [group, setGroup] = useState('');
+	const [dateRange, setDateRange] = useState<string[]>([]);
+
+	// Видимый диапазон: выбранный в шапке, иначе из db
+	const range = dateRange.length === 2 ? dateRange : (data?.dateRange || []);
+
+	const statuses = useMemo(() => Array.from(
+		new Set((data?.issues || []).map((issue: any) => getIssueStatus(issue)).filter(Boolean))
+	).sort((a: any, b: any) => a.localeCompare(b)), [data]);
+
+	const types = useMemo(() => Array.from(
+		new Set((data?.issues || []).map((issue: any) => issue?.jira?.type).filter(Boolean))
+	).sort((a: any, b: any) => a.localeCompare(b)), [data]);
 
 	const toggle = () => {
 		setExpanded((v) => !v);
@@ -66,18 +84,39 @@ export const App = () => {
 			<Header
 				expanded={expanded}
 				drawer={drawer}
-				dateRange={data?.dateRange}
+				dateRange={range}
+				search={search}
+				status={status}
+				statuses={statuses as string[]}
+				type={type}
+				types={types as string[]}
+				startDate={startDate}
+				group={group}
+				groups={data?.groups}
 				toggle={toggle}
 				setModal={setModal}
 				setDrawer={setDrawer}
+				setSearch={setSearch}
+				setStatus={setStatus}
+				setType={setType}
+				setStartDate={setStartDate}
+				setGroup={setGroup}
+				setDateRange={setDateRange}
 			/>
 			<div className={s.content}>
 				<Table
 					expanded={expanded}
-					dateRange={data?.dateRange}
+					dateRange={range}
+					filterDateRange={dateRange}
 					issues={data?.issues}
 					updated={data?.updated}
 					team={data?.team}
+					search={search}
+					status={status}
+					type={type}
+					startDate={startDate}
+					group={group}
+					groups={data?.groups}
 					weekends={data?.weekends}
 					delimiters={data?.delimiters}
 					host={data.host}

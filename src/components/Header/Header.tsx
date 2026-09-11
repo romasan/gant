@@ -6,84 +6,155 @@ interface IProps {
 	expanded: boolean;
 	drawer: string;
 	dateRange?: string[],
+	search: string;
+	status: string;
+	statuses: string[];
+	type: string;
+	types: string[];
+	startDate: string;
+	group: string;
+	groups: any;
 	toggle: () => void;
 	setModal: (value: string) => void;
 	setDrawer: (value: string) => void;
+	setSearch: (value: string) => void;
+	setStatus: (value: string) => void;
+	setType: (value: string) => void;
+	setStartDate: (value: string) => void;
+	setGroup: (value: string) => void;
+	setDateRange: (value: string[]) => void;
 }
 
 export const Header = ({
 	expanded,
 	drawer,
 	dateRange,
+	search = '',
+	status = '',
+	statuses = [],
+	type = '',
+	types = [],
+	startDate = '',
+	group = '',
+	groups = {},
 	toggle,
 	setModal,
 	setDrawer,
+	setSearch,
+	setStatus,
+	setType,
+	setStartDate,
+	setGroup,
+	setDateRange,
 }: IProps) => {
 	const [dateFrom, setDateFrom] = useState('');
 	const [dateTo, setDateTo] = useState('');
-
-	const today = new Date(new Date().toISOString().split('T')[0]).getTime();
-	const from = new Date(dateFrom).getTime();
-	const to = new Date(dateTo).getTime();
+	// после очистки ❌ не подставляем диапазон из db обратно в поля
+	const [dateCleared, setDateCleared] = useState(false);
 
 	const updateFrom = (event: any) => {
-		const value = new Date(event.target.value).getTime();
+		const value = event.target.value;
+		const to = dateTo || value;
 
-		if (value > today || value > to) {
+		if (!value) {
+			return;
+		}
+
+		if (value > to) {
 			alert('такую дату поставить не получится');
 
 			return;
 		}
 
-		setDateFrom(event.target.value);
+		setDateCleared(false);
+		setDateFrom(value);
+		setDateRange([value, to]);
 	};
 
 	const updateTo = (event: any) => {
-		const value = new Date(event.target.value).getTime();
+		const value = event.target.value;
+		const from = dateFrom || value;
 
-		if (value < today || value < from) {
+		if (!value) {
+			return;
+		}
+
+		if (value < from) {
 			alert('такую дату поставить не получится');
 
 			return;
 		}
 
-		setDateTo(event.target.value);
+		setDateCleared(false);
+		setDateTo(value);
+		setDateRange([from, value]);
+	};
+
+	// Сброс фильтра по датам: поля пустые, диаграмма — диапазон из db
+	const clearDates = () => {
+		setDateCleared(true);
+		setDateFrom('');
+		setDateTo('');
+		setDateRange([]);
 	};
 
 	useEffect(() => {
+		if (dateCleared) {
+			return;
+		}
+
 		if (dateRange?.length) {
 			const [from, to] = dateRange;
 
 			setDateFrom(from);
 			setDateTo(to);
 		}
-	}, [dateRange]);
+	}, [dateRange, dateCleared]);
 
 	return (
 		<div className={s.root}>
 			<div className={s.left}>
 				<button onClick={toggle}>{expanded ? '⬅️' : '➡️'}</button>
 				<h1>Гант</h1>
-				&nbsp;
-				{/* <input type="date" onChange={updateFrom} value={dateFrom} /> */}
-				{/* min="2025-06-01" */}
-				{/* <input type="date" onChange={updateTo} value={dateTo} /> */}
-				{/* <button>показать</button> */}
+				<input
+					className={s.search}
+					type="search"
+					placeholder="поиск по названию"
+					value={search || ''}
+					onChange={(event) => setSearch(event.target.value)}
+				/>
+				<input className={s.field} type="date" onChange={updateFrom} value={dateFrom} />
+				<input className={s.field} type="date" onChange={updateTo} value={dateTo} />
+				<button
+					className={s.clear}
+					type="button"
+					title="сбросить даты"
+					onClick={clearDates}
+				>❌</button>
 				{/* · */}
-				<select>
-					<option>все статусы</option>
+				<select className={s.field} value={status} onChange={(event) => setStatus(event.target.value)}>
+					<option value="">все статусы</option>
+					{statuses.map((item) => (
+						<option key={item} value={item}>{item}</option>
+					))}
 				</select>
-				<select>
-					<option>все типы</option>
+				<select className={s.field} value={type} onChange={(event) => setType(event.target.value)}>
+					<option value="">все типы</option>
+					{types.map((item) => (
+						<option key={item} value={item}>{item}</option>
+					))}
 				</select>
-				<select>
-					<option>любая дата начала</option>
+				<select className={s.field} value={startDate} onChange={(event) => setStartDate(event.target.value)}>
+					<option value="">любая дата начала</option>
+					<option value="has">есть дата начала</option>
+					<option value="none">нет даты начала</option>
 				</select>
-				<select>
-					<option>все участники</option>
-					<option>все кроме лида</option>
-					<option>группа 1234</option>
-					<option>рассинхрон назначенного</option>
+				<select className={s.field} value={group} onChange={(event) => setGroup(event.target.value)}>
+					<option value="">все участники</option>
+					<option value="sync">рассинхрон назначенного</option>
+					{Object.keys(groups || {}).map((key) => (
+						<option key={key} value={key}>{key}</option>
+					))}
 				</select>
 				·
 				<button onClick={() => setModal('task')}>добавить задачу</button>

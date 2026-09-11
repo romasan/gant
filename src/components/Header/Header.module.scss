@@ -20,3 +20,26 @@
 	align-items: center;
 	gap: 10px;
 }
+
+.search,
+.field {
+	padding: 2px 6px;
+	border: 1px solid #555;
+	border-radius: 3px;
+	background-color: #1a1a1a;
+	color: #fff;
+}
+
+.clear {
+	padding: 2px 6px;
+	border: 1px solid #555;
+	border-radius: 3px;
+	background-color: #1a1a1a;
+	color: #fff;
+	cursor: pointer;
+	line-height: 1;
+
+	&:hover {
+		border-color: #888;
+	}
+}
