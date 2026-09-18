@@ -1,6 +1,6 @@
 const fs = require('fs');
 const { v4: uuid } = require('uuid');
-const fetch = require('node-fetch');
+const { createJiraClient, extractErrorMessage } = require('@vklive/jira');
 const { get, set } = require('./db');
 require('dotenv').config();
 
@@ -9,13 +9,37 @@ const {
 	JIRA_TOKEN,
 } = process.env;
 
+// Клиент Jira из npm-пакета @vklive/jira: адрес и токен передаются аргументами,
+// самописный fetch-код и сборка URL заменены на методы пакета.
+// notAssigned совпадает с UNKNOWN из src/constants.ts («Не назначена»).
+const jira = createJiraClient({
+	url: JIRA_URL,
+	token: JIRA_TOKEN,
+	notAssigned: 'Не назначена',
+});
+
+// Поля задачи, которые запрашиваются у Jira.
+const FIELDS = ['key', 'summary', 'status', 'assignee', 'updated', 'created', 'sprint', 'timetracking', 'priority'];
+
+// История статусов и Target start/end собираются из changelog, поэтому все запросы идут с expand.
+const EXPAND = 'changelog';
+
+// Сырые ответы Jira сохраняются в tmp/ для отладки; ошибка записи не прерывает обработку.
+const writeTmp = (name, data) => {
+	try {
+		fs.writeFileSync(__dirname + '/../tmp/' + name + '.json', JSON.stringify(data, null, 2));
+	} catch (error) {
+		console.log('==== Error:', error);
+	}
+};
+
+// Общие поля (key, summary, status, assignee, priority) берём из нормализации @vklive/jira,
+// историю статусов и Target start/end — из changelog сырого ответа (issue.raw).
 const processIssue = (issue) => {
-	const key = issue.key;
-	const status = issue.fields.status.name;
-	const summary = issue.fields.summary;
-	const assignee = issue.fields.assignee.displayName;
-	const priority = issue.fields.priority.name;
-	const statuses = issue.changelog.histories.map((item) => {
+	const fields = issue.fields || {};
+	const histories = issue.raw?.changelog?.histories || [];
+
+	const statuses = histories.map((item) => {
 		const statusField = item.items.find((v) => v.field === 'status');
 
 		if (!statusField) {
@@ -30,7 +54,7 @@ const processIssue = (issue) => {
 		};
 	}).filter(Boolean);
 
-	const targets = issue.changelog.histories.map((item) =>
+	const targets = histories.map((item) =>
 		item.items.filter((v) => ['Target start', 'Target end'].includes(v.field))
 	)
 		.reduce((item, list) => ([...list, ...item]), []);
@@ -45,55 +69,33 @@ const processIssue = (issue) => {
 		.shift()
 		?.to;
 
-	const updatedDate = issue.fields.updated;
-	const resolvedDate = issue.fields.resolutiondate;
-	const createdDate = issue.fields.created;
-	const timetracking = issue.fields.timetracking?.originalEstimate;
-
 	return {
-		key,
-		status,
-		summary,
-		assignee,
+		key: issue.key,
+		status: issue.status,
+		summary: issue.summary,
+		assignee: issue.assignee,
 		statuses,
-		updatedDate,
-		resolvedDate,
-		createdDate,
-		timetracking,
+		updatedDate: fields.updated,
+		resolvedDate: fields.resolutiondate,
+		createdDate: fields.created,
+		timetracking: fields.timetracking?.originalEstimate,
 		targetStart,
 		targetEnd,
-		priority,
+		priority: issue.priority,
 	};
 }
 
 const getIssue = async (issueKey) => {
-	// const url = `${JIRA_URL}/rest/api/2/issue/${issueKey}?expand=changelog`;
-	const url = `${JIRA_URL}/rest/api/2/issue/${issueKey}?${new URLSearchParams({
-		expand: 'changelog',
-		fields: 'key,summary,status,assignee,updated,created,sprint,timetracking,priority'
-	})}`;
+	// Нормализованная задача пакета + сырой ответ (raw) для changelog
+	const issue = await jira.getIssueFullData(issueKey, { fields: FIELDS, expand: EXPAND });
 
-	const response = await fetch(url, {
-		headers: {
-			'Authorization': `Bearer ${JIRA_TOKEN}`
-		}
-	});
-
-	const issue = await response.json();
-	// const text = await response.text();
-
-	try {
-		fs.writeFileSync(__dirname + '/../tmp/' + issueKey + '.json', JSON.stringify(issue, null, 2));
-		// fs.writeFileSync(__dirname + '/../tmp/' + issueKey + '.json', text);
-	} catch (error) {
-		console.log('==== Error:', error);
-
-		return {};
-	}
+	writeTmp(issue.key, issue.raw);
 
 	try {
 		return processIssue(issue);
 	} catch (error) {
+		console.log('==== Error:', error);
+
 		return { error: true };
 	}
 }
@@ -118,29 +120,6 @@ const refetchIssue = async (key) => {
 		set('issues', allIssues);
 	} 
 };
-
-// const cache = checkCache(id);
-// const url = `${JIRA_URL}/rest/agile/1.0/board/${id}/issue?expand=changelog`;
-
-// const checkCache = (id) => {
-// 	const filePath = __dirname + '/../tmp/board-' + id + '.json';
-
-// 	if (fs.existsSync(filePath)) {
-// 		try {
-// 			const file = fs.readFileSync(filePath).toString();
-
-// 			return JSON.parse(file);
-// 		} catch (error) { }
-// 	}
-
-// 	return null;
-// };
-
-// const sprints = ['vklive'];
-// const projects = ['vkpl'];
-// const excludeTypes = ['Sub-bug', 'Sub-story', 'BugReport'];
-// const excludedStatuses = ['Done'];
-// const components = ['frontend desktop', 'frontend mobile', 'frontend sdk', 'frontend widgets', 'frontend devapi', 'frontend autotest'];
 
 const IN = (list) => list.map((item) => `'${item}'`).join(', ');
 
@@ -170,52 +149,25 @@ const updateIssues = async () => {
 const getRandomJql = async (jql, inSprint = false) => {
 	console.log('==== JQL:', jql);
 
-	let allDataIssues = [];
-	let startAt = 0;
-	const maxResults = 100;
-	let total;
+	let allDataIssues;
 
 	try {
-		do {
-			const url = `${JIRA_URL}/rest/api/2/search?${new URLSearchParams({
-				jql,
-				maxResults,
-				startAt,
-				expand: 'changelog',
-				fields: 'key,summary,status,assignee,updated,created,sprint,timetracking,priority'
-			})}`;
-	
-			const response = await fetch(url, {
-				headers: {
-					'Authorization': `Bearer ${JIRA_TOKEN}`
-				}
-			});
-	
-			const data = await response.json();
-
-			if (data?.errorMessages?.length) {
-				throw new Error(data.errorMessages.join('\n'));
-			}
-	
-			if (total === undefined) {
-				total = data.total;
-			}
-	
-			allDataIssues = allDataIssues.concat(data.issues);
-			startAt += maxResults;
-	
-			try {
-				fs.writeFileSync(__dirname + '/../tmp/issues.json', JSON.stringify(data, null, 2));
-			} catch (error) {
-				console.log('==== Error:', error);
-	
-				return {};
-			}
-		} while (startAt < total);
+		// all: true перебирает все страницы (по 100 задач) — вместо ручного цикла по startAt.
+		// Каждая страница отдаётся в onPage и сохраняется в tmp/issues.json для отладки.
+		allDataIssues = await jira.searchIssues(jql, {
+			fields: FIELDS,
+			expand: EXPAND,
+			full: false,
+			all: true,
+			pageSize: 100,
+			onPage: (data) => writeTmp('issues', data),
+		});
 	} catch (error) {
 		console.log('==== catch', String(error));
+
+		// текст ошибки Jira берём из ответа (errorMessages), а не из AxiosError.message
 		return {
-			error: String(error),
+			error: extractErrorMessage(error),
 			jql,
 		}
 	}

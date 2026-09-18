@@ -21,7 +21,7 @@ Gantt-диаграмма для визуализации и планирован
 
 ### Требования
 
-- Node.js (с `fetch` — Node 18+)
+- Node.js (проверено на 18+); HTTP-запросы к Jira идут через npm-пакет `@vklive/jira` (axios)
 - Доступ к корпоративной Jira (`JIRA_URL`)
 
 ### Создание токена Jira
@@ -59,7 +59,7 @@ npm run dev:server   # сервер (nodemon, авто-перезапуск пр
 
 ## Возможности
 
-- **Загрузка задач из Jira** — по JQL-запросам с постраничной выборкой (`maxResults=100`), включая историю смены статусов (changelog) и целевые даты (`Target start` / `Target end`).
+- **Загрузка задач из Jira** — через клиент `@vklive/jira` по JQL-запросам с полным перебором страниц (`pageSize=100`), включая историю смены статусов (`expand=changelog`) и целевые даты (`Target start` / `Target end`).
 - **Gantt-таблица** — задачи в виде строк, каждый день — ячейка с цветовой индикацией статуса; шапка с датами, месяцами, выходными.
 - **Планирование** — ручная установка даты начала, длительности (в рабочих днях), исполнителя.
 - **Автоматическая длительность** — если в Jira заполнена оценка (`timetracking`) и задача начала разрабатываться — длительность считается автоматически от фактической даты старта.
@@ -93,7 +93,7 @@ npm run dev:server   # сервер (nodemon, авто-перезапуск пр
 - **Frontend** — одностраничное React-приложение (JS + TS). Точка входа — `index.html` → `src/index.js` (нативно через `<script type="module">`). HMR/дев-сервер запускается командой `npm run dev:web`.
 - **Server** — чистый Node.js `http`-сервер без Express. Раздаёт данные из `db.json` и проксирует запросы в Jira REST API.
 - **Хранилище** — файл `db.json` в корне проекта. Сервер читает его при старте и сохраняет после каждой мутации.
-- **Jira** — интеграция через REST API v2 (`/rest/api/2/...`) с Bearer-авторизацией по токену.
+- **Jira** — интеграция через npm-пакет [`@vklive/jira`](https://www.npmjs.com/package/@vklive/jira) v1.1.0: переиспользуемый клиент Jira REST API v2 с Bearer-авторизацией. Хост и токен передаются аргументами (`JIRA_URL`, `JIRA_TOKEN` из `.env`). Используются методы пакета: `getIssueFullData` (задача с `expand=changelog`) и `searchIssues` с `all: true` (полный перебор страниц по `pageSize`), а текст ошибок Jira берётся из `extractErrorMessage`.
 
 > ℹ️ `src/api.ts` собирает `API_HOST` из `.env` (`WEB_SERVER_HOST`, `WEB_SERVER_PORT`). При смене порта достаточно обновить `.env` — и фронтенд, и сервер подхватят новое значение (Parcel подставляет env-переменные на этапе сборки).
 
@@ -114,7 +114,7 @@ npm run dev:server   # сервер (nodemon, авто-перезапуск пр
 ├── server/               # Backend
 │   ├── index.js          # HTTP-сервер и маршрутизация
 │   ├── db.js             # Работа с db.json (get/set/insert)
-│   ├── jira.js           # Интеграция с Jira (поиск, обработка issues, JQL)
+│   ├── jira.js           # Интеграция с Jira через @vklive/jira (поиск, обработка issues, JQL)
 │   ├── utils.js          # getSearch, getPostPayload
 │   └── api/              # Обработчики маршрутов
 │       ├── start.js      # GET /start — отдать всё состояние БД
@@ -169,9 +169,11 @@ npm run dev:server   # сервер (nodemon, авто-перезапуск пр
   AND component IN (...) AND (sprint IN openSprints() OR sprint IN ('...'))
   ```
 
-- Постранично (по 100 шт.) запрашивает задачи из Jira с `expand=changelog`, обрабатывает каждую (`processIssue`) и **сливает** в `db.issues`:
+- Полным перебором страниц (по 100 шт., `searchIssues(..., { all: true, pageSize: 100, expand: 'changelog' })`) запрашивает задачи из Jira, обрабатывает каждую (`processIssue`) и **сливает** в `db.issues`:
   - задача уже есть (по `jira.key`) → обновляет её `jira`-часть;
   - новой задачи нет → создаёт запись с `base.summary = "KEY: summary"` и `jira`-данными.
+- `processIssue` берёт `key`/`summary`/`status`/`assignee`/`priority` из нормализации пакета (неназначенный исполнитель → «Не назначена»), а историю статусов и `Target start`/`Target end` — из `changelog` сырого ответа задачи (`issue.raw`).
+- Сырой ответ каждой страницы поиска сохраняется в `tmp/issues.json`, задачи по одной — в `tmp/<KEY>.json`; ошибки Jira возвращаются как `{ error, jql }` с текстом из `extractErrorMessage`.
 - Пишет `db.updated` = текущее время.
 
 ### 3. Отображение в таблице

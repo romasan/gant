@@ -21,11 +21,11 @@
 
 ## Ключевые факты о проекте
 
-- **Стек**: React + TypeScript (frontend), чистый Node.js `http`-сервер (backend), JSON-файл `db.json` (БД), REST API Jira v2.
+- **Стек**: React + TypeScript (frontend), чистый Node.js `http`-сервер (backend), JSON-файл `db.json` (БД), REST API Jira v2 через npm-пакет `@vklive/jira`.
 - **Точка входа фронтенда**: `index.html` → `src/index.js` (монтирует `#app`).
 - **Точка входа сервера**: `server/index.js` (маршрутизация по `req.url`).
 - **БД**: файл `db.json` — сервер читает при старте (`server/db.js`), пишет через `set()/insert()` после мутаций.
-- **Jira-интеграция**: `server/jira.js` — поиск по JQL (постранично по 100), обработка issues (`processIssue`), создание новой записи при первом появлении.
+- **Jira-интеграция**: `server/jira.js` — клиент из npm-пакета `@vklive/jira` (`createJiraClient({ url, token, notAssigned })`); поиск по JQL через `searchIssues(..., { all: true, pageSize: 100, expand: 'changelog' })`, задача — через `getIssueFullData(..., { expand: 'changelog' })`; обработка issues (`processIssue` — поля нормализованной задачи + `changelog` из `issue.raw`), текст ошибок Jira — `extractErrorMessage`, создание новой записи при первом появлении.
 - **API_HOST**: `src/api.ts` собирает адрес сервера из `.env` — `WEB_SERVER_HOST` и `WEB_SERVER_PORT` (фоллбэк `localhost:7778`). Parcel подставляет env-переменные на этапе сборки, поэтому при смене порта достаточно обновить `.env`.
 - **Синхронизация задач**: `db.updated` / `issue.updated` — временные метки; `Table` рисует вертикальную линию «обновлено».
 - **Вычисляемые поля** (`firstDay`, `duration`, `plannedDays`, `days`, `isPlanned`) считаются на клиенте в `src/components/Table/utils.ts` `processIssue()` и **не** хранятся в `db.json`.
