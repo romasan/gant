@@ -2,6 +2,7 @@ const http = require('http');
 const { start } = require('./api/start');
 const { issue } = require('./api/issue');
 const { issues } = require('./api/issues');
+const { issuesStream } = require('./api/issuesStream');
 const { list } = require('./api/list');
 const { listJql } = require('./api/listJql');
 const { randomJql } = require('./api/randomJql');
@@ -16,6 +17,7 @@ const routes = {
 	'/start': start,
 	'/issue': issue,
 	'/issues': issues,
+	'/issues/stream': issuesStream,
 	'/list': list,
 	'/list/jql': listJql,
 	'/randomJql': randomJql,

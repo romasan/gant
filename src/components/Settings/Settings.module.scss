@@ -27,6 +27,45 @@
 	color: #fff;
 }
 
+.buttonWrapper {
+	position: relative;
+	display: inline-flex;
+	border-radius: 3px;
+	overflow: hidden;
+
+	button {
+		width: 100%;
+	}
+}
+
+.progress {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: rgba(0, 0, 0, .35);
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.progressBar {
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	width: 0;
+	background-color: rgba(76, 175, 80, .6);
+	transition: width .2s ease;
+}
+
+.progressLabel {
+	position: relative;
+	color: #fff;
+	font-size: 11px;
+	font-weight: bold;
+}
+
 .item {
 	display: flex;
 	justify-content: space-between;

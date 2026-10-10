@@ -1,5 +1,7 @@
 # Changelog
 
+## 2026-10-09 — Real progress via SSE: add GET /issues/stream (progress events from Jira pages), wire "Обновить задачи из спринта" to determinate progress bar
+
 ## 2026-10-08 — Replace dev.sh tmux launcher with concurrently in `npm run dev` (web + nodemon server, -k, named colors); drop dev.sh
 
 ## 2026-09-18 — Use @vklive/jira 1.1.0 API directly in server/jira.js (expand=changelog, paginated search with all/pageSize, extractErrorMessage)

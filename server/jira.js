@@ -123,7 +123,7 @@ const refetchIssue = async (key) => {
 
 const IN = (list) => list.map((item) => `'${item}'`).join(', ');
 
-const updateIssues = async () => {
+const updateIssues = async (onProgress) => {
 	const {
 		projects,
 		excludeTypes,
@@ -143,10 +143,10 @@ const updateIssues = async () => {
 		)
 	`.replace(/[\s\t\n]+/ig, ' ').trim();
 
-	return await getRandomJql(jql, true);
+	return await getRandomJql(jql, true, onProgress);
 };
 
-const getRandomJql = async (jql, inSprint = false) => {
+const getRandomJql = async (jql, inSprint = false, onProgress) => {
 	console.log('==== JQL:', jql);
 
 	let allDataIssues;
@@ -154,13 +154,24 @@ const getRandomJql = async (jql, inSprint = false) => {
 	try {
 		// all: true перебирает все страницы (по 100 задач) — вместо ручного цикла по startAt.
 		// Каждая страница отдаётся в onPage и сохраняется в tmp/issues.json для отладки.
+		// onProgress сообщает обработанное/общее число задач (по startAt/total страницы) —
+		// это и есть реальный прогресс синхронизации для SSE-стрима.
 		allDataIssues = await jira.searchIssues(jql, {
 			fields: FIELDS,
 			expand: EXPAND,
 			full: false,
 			all: true,
 			pageSize: 100,
-			onPage: (data) => writeTmp('issues', data),
+			onPage: (data) => {
+				writeTmp('issues', data);
+
+				if (typeof onProgress === 'function') {
+					const processed = (data.startAt || 0) + (data.issues?.length || 0);
+					const total = Number.isFinite(data.total) ? data.total : processed;
+
+					onProgress({ processed, total });
+				}
+			},
 		});
 	} catch (error) {
 		console.log('==== catch', String(error));

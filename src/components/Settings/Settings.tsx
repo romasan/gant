@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 import {
-	updateSprintIssues,
+	updateSprintIssuesStream,
 	deleteIssues,
 	refetchIssues,
 	setList,
@@ -25,6 +25,7 @@ export const Settings = ({
 }: ISettingsProps) => {
 	// const [boardId, setBoardId] = useState('');
 	const [loadingBoard, setLoadingBoard] = useState(false);
+	const [boardProgress, setBoardProgress] = useState(0);
 	const [refetchIssuesLoading, setRefetchIssuesLoading] = useState(false);
 	const [updateIssuesByTarget, setUpdateIssuesByTarget] = useState(false);
 	const [updatedTime, setUpdatedTime] = useState(86400000);
@@ -40,9 +41,21 @@ export const Settings = ({
 
 	const getBoard = () => {
 		setLoadingBoard(true);
-		updateSprintIssues()
-			.then(onChange)
-			.finally(() => setLoadingBoard(false));
+		setBoardProgress(0);
+
+		updateSprintIssuesStream(
+			({ processed, total }) => {
+				setBoardProgress(total ? Math.round((processed / total) * 100) : 0);
+			},
+			() => {
+				setLoadingBoard(false);
+				onChange();
+			},
+			() => {
+				setLoadingBoard(false);
+				onChange();
+			},
+		);
 	};
 
 	const clearBoard = () => {
@@ -203,7 +216,22 @@ export const Settings = ({
 				Управление задачами
 			</h2>
 			<div className={s.row}>
-				<button onClick={getBoard} disabled={loadingBoard}>Обновить задачи из спринта</button>
+				<div className={s.buttonWrapper}>
+					<button onClick={getBoard} disabled={loadingBoard}>Обновить задачи из спринта</button>
+					{loadingBoard && (
+						<div
+							className={s.progress}
+							role="progressbar"
+							aria-label="Обновление задач из спринта"
+							aria-valuemin={0}
+							aria-valuemax={100}
+							aria-valuenow={boardProgress}
+						>
+							<span className={s.progressBar} style={{ width: `${boardProgress}%` }} />
+							<span className={s.progressLabel}>{boardProgress}%</span>
+						</div>
+					)}
+				</div>
 			</div>
 			{/* <div className={s.row}>
 				<button onClick={removeAllInDone}>Убрать готовые задачи ({doneIssues.length})</button>

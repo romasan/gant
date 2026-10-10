@@ -45,6 +45,60 @@ export const updateSprintIssues = async () => {
 	}
 };
 
+// Реальная синхронизация задач из спринта через SSE (GET /issues/stream).
+// onProgress получает { processed, total } по мере перебора страниц Jira,
+// onDone — итоговый payload, onFail — ошибку (стрим или ошибка Jira).
+export const updateSprintIssuesStream = (
+	onProgress: (progress: { processed: number; total: number }) => void,
+	onDone: (payload: any) => void,
+	onFail?: (error: any) => void,
+) => {
+	const source = new EventSource(`${API_HOST}/issues/stream`);
+
+	let finished = false;
+
+	const finish = () => {
+		finished = true;
+		source.close();
+	};
+
+	const parse = (event: any, fallback: any) => {
+		try {
+			return JSON.parse(event.data);
+		} catch (ignore) {
+			return fallback;
+		}
+	};
+
+	source.addEventListener('progress', (event: any) => onProgress(parse(event, { processed: 0, total: 0 })));
+
+	source.addEventListener('done', (event: any) => {
+		const payload = parse(event, {});
+
+		finish();
+		onDone(payload);
+	});
+
+	source.addEventListener('fail', (event: any) => {
+		const error = parse(event, { message: 'Update failed' });
+
+		finish();
+		onFail?.(error);
+	});
+
+	source.onerror = () => {
+		// Штатное закрытие стрима после done/fail уже обработано — не считаем ошибкой.
+		if (finished) {
+			return;
+		}
+
+		finish();
+		onFail?.({ message: 'Connection error' });
+	};
+
+	return source;
+};
+
 export const deleteIssues = async (payload?: any) => {
 	return await fetch(`${API_HOST}/issues`, {
 		method: 'DELETE',
