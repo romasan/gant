@@ -13,6 +13,8 @@ interface IRowProps {
 	expanded: boolean;
 	issue: any;
 	startGroup: boolean;
+	collapsed: boolean;
+	onToggle: () => void;
 	editIssue: (value: any) => void;
 }
 
@@ -22,6 +24,8 @@ export const Row = ({
 	expanded,
 	issue,
 	startGroup,
+	collapsed,
+	onToggle,
 	editIssue,
 }: IRowProps) => {
 	const edit = (event: any) => {
@@ -78,8 +82,16 @@ export const Row = ({
 		<>
 			{startGroup && (
 				<>
-					<div className={s.group}>
-						<span>{issue?.base?.assignee || issue?.jira?.assignee || 'Не назначена'}</span>
+					<div
+						className={cn(s.group, {
+							[s.collapsed]: collapsed,
+						})}
+						onClick={onToggle}
+					>
+						<span>
+							<span className={s.chevron}>{collapsed ? '▶' : '▼'}</span>
+							{issue?.base?.assignee || issue?.jira?.assignee || 'Не назначена'}
+						</span>
 					</div>
 					<div style={{position:'relative'}}>
 						<div style={{position:'absolute',display:'flex',top:'-20px'}}>
@@ -100,22 +112,24 @@ export const Row = ({
 					</div>
 				</>
 			)}
-			<div className={cn(s.row, {
-				[s.tableHead]: y === 0,
-			})}>
-				{days.map((day, x) => (
-					<Cell
-						key={`${day.date}-${y}`}
-						day={day}
-						x={x}
-						y={y}
-						expanded={expanded}
-						fill={issue?.days?.[day?.date]}
-						title={x === 0 ? getTitle() as ReactNode : ''}
-						issue={issue}
-					/>
-				))}
-			</div>
+			{!collapsed && (
+				<div className={cn(s.row, {
+					[s.tableHead]: y === 0,
+				})}>
+					{days.map((day, x) => (
+						<Cell
+							key={`${day.date}-${y}`}
+							day={day}
+							x={x}
+							y={y}
+							expanded={expanded}
+							fill={issue?.days?.[day?.date]}
+							title={x === 0 ? getTitle() as ReactNode : ''}
+							issue={issue}
+						/>
+					))}
+				</div>
+			)}
 		</>
 	);
 };

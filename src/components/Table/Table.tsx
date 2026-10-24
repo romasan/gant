@@ -2,6 +2,7 @@ import { useEffect, useRef, useMemo, useState } from 'react';
 
 import cn from 'classnames';
 
+import { UNKNOWN } from '../../constants';
 import { Row, Menu } from './components';
 import {
 	getDays,
@@ -77,6 +78,13 @@ export const Table = ({
 	const menuRef = useRef(null);
 
 	const [menu, setMenu] = useState<any>(null);
+	const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+	const getAssignee = (issue: any) => issue?.base?.assignee || issue?.jira?.assignee || UNKNOWN;
+
+	const toggleCollapse = (assignee: string) => {
+		setCollapsed((prev) => ({ ...prev, [assignee]: !prev[assignee] }));
+	};
 
 	const list = useMemo(() => [{ id: '.' }].concat(
 		issues
@@ -94,6 +102,20 @@ export const Table = ({
 		getDays(dateRange, false, weekends)
 			.map((item) => processDay(item, list))
 	), [firstColDay, dateRange]);
+
+	// Скрываем задачи свернутых исполнителей, оставляя строку-заголовок группы
+	const visibleList = useMemo(() => {
+		return list.filter((item: any, index: number) => {
+			if (index === 0) {
+				return true;
+			}
+
+			const assignee = getAssignee(item);
+			const isGroupStart = index === 1 || getAssignee(list[index - 1]) !== assignee;
+
+			return isGroupStart || !collapsed[assignee];
+		});
+	}, [list, collapsed]);
 	const todayOffset = getToday(dateRange);
 	const updatedOffset = updated ? getToday(dateRange, new Date(updated)) : 0;
 	const delimitersList = delimiters.map((delimiter) => getToday(dateRange, new Date(delimiter)));
@@ -152,14 +174,16 @@ export const Table = ({
 					})}
 					onClick={handleClick}
 				>
-					{list.map((issue, y) => (
+					{visibleList.map((issue, y) => (
 						<Row
 							key={issue.id}
 							y={y}
 							days={days}
 							expanded={expanded}
 							issue={issue}
-							startGroup={checkGroupStart(list, y)}
+							startGroup={checkGroupStart(visibleList, y)}
+							collapsed={y !== 0 && Boolean(collapsed[getAssignee(issue)])}
+							onToggle={() => toggleCollapse(getAssignee(issue))}
 							editIssue={editIssue}
 						/>
 					))}

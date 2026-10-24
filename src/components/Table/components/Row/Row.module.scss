@@ -18,6 +18,8 @@
 	height: var(--base-size);
 	outline: 1px solid #e7e7e7;
 	z-index: 2;
+	cursor: pointer;
+	user-select: none;
 
 	& > span {
 		position: absolute;
@@ -38,6 +40,14 @@
 			display: block;
 		}
 	}
+}
+
+.chevron {
+	display: inline-block;
+	width: 12px;
+	margin-left: -2px;
+	color: #177ec1;
+	font-size: 9px;
 }
 
 .tableHead {
