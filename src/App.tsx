@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 
-import { fetchData } from './api';
+import { fetchData, updateSprintIssuesStream } from './api';
 import { getIssueStatus } from './components/Table/utils';
 import {
 	Header,
@@ -25,6 +25,46 @@ export const App = () => {
 	const [startDate, setStartDate] = useState('');
 	const [group, setGroup] = useState('');
 	const [dateRange, setDateRange] = useState<string[]>([]);
+
+	const [toast, setToast] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null);
+	const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const autoUpdateRef = useRef(false);
+
+	// 1 час — порог «устаревших» данных для автообновления при открытии
+	const ONE_HOUR = 60 * 60 * 1000;
+
+	const showToast = (
+		message: string,
+		type: 'info' | 'success' | 'error' = 'info',
+		autoHide = true,
+	) => {
+		setToast({ message, type });
+
+		if (toastTimerRef.current) {
+			clearTimeout(toastTimerRef.current);
+			toastTimerRef.current = null;
+		}
+
+		if (autoHide) {
+			toastTimerRef.current = setTimeout(() => setToast(null), 4000);
+		}
+	};
+
+	const startBoardUpdate = () => {
+		showToast('Обновляется список задач…', 'info', false);
+
+		updateSprintIssuesStream(
+			() => {},
+			() => {
+				prefetchData();
+				showToast('Список задач обновлён', 'success');
+			},
+			() => {
+				prefetchData();
+				showToast('Не удалось обновить список задач', 'error');
+			},
+		);
+	};
 
 	// Видимый диапазон: выбранный в шапке, иначе из db
 	const range = dateRange.length === 2 ? dateRange : (data?.dateRange || []);
@@ -62,7 +102,21 @@ export const App = () => {
 	}
 
 	useEffect(() => {
-		prefetchData();
+		fetchData().then((result) => {
+			setData(result);
+
+			// Автообновление при открытии: если последняя синхронизация была больше часа назад
+			if (autoUpdateRef.current) {
+				return;
+			}
+
+			const updated = result?.updated;
+
+			if (updated && (Date.now() - new Date(updated).getTime()) > ONE_HOUR) {
+				autoUpdateRef.current = true;
+				startBoardUpdate();
+			}
+		});
 	}, []);
 
 	useEffect(() => {
@@ -168,6 +222,11 @@ export const App = () => {
 					</div>
 				)}
 			</div>
+			{toast && (
+				<div className={`${s.toast} ${s[toast.type]}`}>
+					{toast.message}
+				</div>
+			)}
 		</div>
 	);
 };
